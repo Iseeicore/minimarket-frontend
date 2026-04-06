@@ -37,8 +37,9 @@ export function useCreateDevolucion() {
   return useMutation({
     mutationFn: (data: CreateDevolucionDto) => devolucionesService.create(data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: qk.devoluciones.all })  // invalida todas las páginas
+      qc.invalidateQueries({ queryKey: qk.devoluciones.all })
       qc.invalidateQueries({ queryKey: qk.ventas.all })
+      qc.invalidateQueries({ queryKey: qk.registroAlmacen.all })
       if (almacenId) {
         qc.invalidateQueries({ queryKey: qk.stock.byAlmacen(almacenId) })
         qc.invalidateQueries({ queryKey: qk.caja.activa(almacenId) })

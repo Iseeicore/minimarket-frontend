@@ -24,7 +24,7 @@ export type TipoMovCaja = 'INGRESO' | 'EGRESO' | 'AJUSTE'
 export type TipoComprobante = 'TICKET' | 'BOLETA' | 'FACTURA'
 
 // Cuadernos virtuales (RegistroAlmacen / RegistroTienda)
-export type TipoMovRegistro = 'SALIDA' | 'ENTRADA' | 'TRANSFERENCIA'
+export type TipoMovRegistro = 'SALIDA' | 'ENTRADA' | 'TRANSFERENCIA' | 'DEVOLUCION'
 
 // Sincronización
 export type TipoSincronizacion   = 'MANUAL' | 'CIERRE_DIA' | 'PROGRAMADA'

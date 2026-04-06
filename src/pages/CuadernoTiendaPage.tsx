@@ -2,11 +2,15 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { BookOpen, Plus, Loader2, RotateCcw, ChevronDown } from 'lucide-react'
 import { useRegistrosTienda, useCreateRegistroTienda, useMarcarDevueltoTienda } from '../hooks/useRegistrosTienda'
+import { useAlmacenes } from '../hooks/useAlmacenes'
+import { useAuthStore } from '../store/auth.store'
 import { variantesService } from '../services/productos.service'
 import { qk } from '../lib/query-keys'
 import Modal from '../components/shared/Modal'
 import EmptyState from '../components/shared/EmptyState'
 import type { TipoMovRegistro } from '../types'
+
+const LS_KEY_CT = 'mm:cuaderno-tienda:almacenId'
 
 // ── Helpers ────────────────────────────────────────────────────
 function formatFecha(iso: string) {
@@ -17,22 +21,25 @@ function formatFecha(iso: string) {
 }
 
 const TIPO_LABEL: Record<TipoMovRegistro, string> = {
-  SALIDA: 'Salida',
-  ENTRADA: 'Entrada',
+  SALIDA:        'Salida',
+  ENTRADA:       'Entrada',
   TRANSFERENCIA: 'Transferencia',
+  DEVOLUCION:    'Devolución',
 }
 
 const TIPO_COLOR: Record<TipoMovRegistro, string> = {
-  SALIDA:       'bg-red-100 text-red-700',
-  ENTRADA:      'bg-green-100 text-green-700',
-  TRANSFERENCIA:'bg-blue-100 text-blue-700',
+  SALIDA:        'bg-red-100 text-red-700',
+  ENTRADA:       'bg-green-100 text-green-700',
+  TRANSFERENCIA: 'bg-blue-100 text-blue-700',
+  DEVOLUCION:    'bg-amber-100 text-amber-700',
 }
 
 // ── Formulario nuevo registro ──────────────────────────────────
 interface FormNuevoRegistroProps {
+  almacenId: number
   onClose: () => void
 }
-function FormNuevoRegistro({ onClose }: FormNuevoRegistroProps) {
+function FormNuevoRegistro({ almacenId, onClose }: FormNuevoRegistroProps) {
   const [varianteId, setVarianteId] = useState('')
   const [cantidad, setCantidad]     = useState('')
   const [tipo, setTipo]             = useState<TipoMovRegistro>('SALIDA')
@@ -51,7 +58,7 @@ function FormNuevoRegistro({ onClose }: FormNuevoRegistroProps) {
     e.preventDefault()
     if (!varianteId || !cantidad) return
     crear.mutate(
-      { varianteId: Number(varianteId), cantidad: Number(cantidad), tipo, notas: notas.trim() || undefined },
+      { almacenId, varianteId: Number(varianteId), cantidad: Number(cantidad), tipo, notas: notas.trim() || undefined },
       { onSuccess: onClose }
     )
   }
@@ -212,6 +219,26 @@ function ConfirmDevolucion({ onConfirm, onClose, isPending }: ConfirmDevolucionP
 
 // ── Página principal ───────────────────────────────────────────
 export default function CuadernoTiendaPage() {
+  const usuario      = useAuthStore(s => s.usuario)
+  const isAdmin      = useAuthStore(s => s.isAdmin)
+  const isAdminUser  = isAdmin()
+  const { data: almacenes = [] } = useAlmacenes()
+
+  // Admin selecciona almacén; JEFE_VENTA usa el propio
+  const [adminAlmacenId, setAdminAlmacenId] = useState<number | null>(() => {
+    const saved = localStorage.getItem(LS_KEY_CT)
+    return saved ? Number(saved) : null
+  })
+  const almacenId: number | null = isAdminUser
+    ? adminAlmacenId
+    : (usuario?.almacenId ?? null)
+
+  function handleAlmacenChange(id: number | null) {
+    setAdminAlmacenId(id)
+    if (id) localStorage.setItem(LS_KEY_CT, String(id))
+    else localStorage.removeItem(LS_KEY_CT)
+  }
+
   const { data: registros = [], isLoading } = useRegistrosTienda()
   const marcarDevuelto = useMarcarDevueltoTienda()
 
@@ -219,9 +246,13 @@ export default function CuadernoTiendaPage() {
   const [devolverId, setDevolverId] = useState<number | null>(null)
   const [filtroTipo, setFiltroTipo] = useState<TipoMovRegistro | ''>('')
 
-  const filtrados = filtroTipo
-    ? registros.filter(r => r.tipo === filtroTipo)
+  const porAlmacen = almacenId
+    ? registros.filter(r => r.almacenId === almacenId)
     : registros
+
+  const filtrados = filtroTipo
+    ? porAlmacen.filter(r => r.tipo === filtroTipo)
+    : porAlmacen
 
   if (isLoading) {
     return (
@@ -243,14 +274,33 @@ export default function CuadernoTiendaPage() {
             <p className="text-sm text-tin-dark mt-0.5">Registros manuales del jefe de tienda</p>
           </div>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white font-semibold text-sm transition-all duration-150 active:scale-95 shrink-0"
-        >
-          <Plus size={15} />
-          <span className="hidden sm:inline">Nuevo registro</span>
-          <span className="sm:hidden">Nuevo</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {isAdminUser && (
+            <div className="relative">
+              <select
+                value={adminAlmacenId ?? ''}
+                onChange={e => handleAlmacenChange(e.target.value ? Number(e.target.value) : null)}
+                className="appearance-none pl-3 pr-8 py-2 rounded-xl border border-tin/30 text-sm font-medium text-gray-700 bg-white hover:border-tin/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors cursor-pointer"
+              >
+                <option value="">Todos los almacenes</option>
+                {almacenes.map(a => (
+                  <option key={a.id} value={a.id}>{a.nombre}</option>
+                ))}
+              </select>
+              <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tin pointer-events-none" />
+            </div>
+          )}
+          {almacenId && (
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white font-semibold text-sm transition-all duration-150 active:scale-95 shrink-0"
+            >
+              <Plus size={15} />
+              <span className="hidden sm:inline">Nuevo registro</span>
+              <span className="sm:hidden">Nuevo</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── Filtros ── */}
@@ -371,7 +421,7 @@ export default function CuadernoTiendaPage() {
 
       {/* ── Modal nuevo registro ── */}
       <Modal open={showForm} title="Nuevo registro de tienda" onClose={() => setShowForm(false)} size="md">
-        <FormNuevoRegistro onClose={() => setShowForm(false)} />
+        {almacenId && <FormNuevoRegistro almacenId={almacenId} onClose={() => setShowForm(false)} />}
       </Modal>
 
       {/* ── Modal confirmar devolución ── */}

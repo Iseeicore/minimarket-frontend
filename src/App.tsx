@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Layout from './components/layout/Layout'
+import TiendaLayout from './components/layout/TiendaLayout'
 import ProtectedRoute from './components/layout/ProtectedRoute'
+import { useAuthStore } from './store/auth.store'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
@@ -23,6 +25,19 @@ import CuadernoAlmacenPage from './pages/CuadernoAlmacenPage'
 import CuadernoTiendaPage from './pages/CuadernoTiendaPage'
 import SincronizacionPage from './pages/SincronizacionPage'
 import SincronizacionDetallePage from './pages/SincronizacionDetallePage'
+import TiendaHomePage from './pages/tienda/TiendaHomePage'
+import TiendaCuadernoPage from './pages/tienda/TiendaCuadernoPage'
+import TiendaSincronizacionPage from './pages/tienda/TiendaSincronizacionPage'
+import TiendaHistorialPage from './pages/tienda/TiendaHistorialPage'
+import TiendaSincronizacionDetallePage from './pages/tienda/TiendaSincronizacionDetallePage'
+import TiendaListaDiaPage from './pages/tienda/TiendaListaDiaPage'
+import TiendaStockPage from './pages/tienda/TiendaStockPage'
+
+/** Redirige según rol: JEFE_VENTA → /tienda, resto → /dashboard */
+function SmartRedirect() {
+  const rol = useAuthStore(s => s.usuario?.rol)
+  return <Navigate to={rol === 'JEFE_VENTA' ? '/tienda' : '/dashboard'} replace />
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,7 +75,7 @@ export default function App() {
                 <Route path="/cuaderno-almacen" element={<CuadernoAlmacenPage />} />
               </Route>
 
-              {/* Cuadernos — JEFE_VENTA */}
+              {/* Cuadernos — JEFE_VENTA (acceso desde sidebar para ADMIN) */}
               <Route
                 element={<ProtectedRoute roles={['ADMIN', 'JEFE_VENTA']} />}
               >
@@ -79,7 +94,21 @@ export default function App() {
               </Route>
             </Route>
           </Route>
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+
+          {/* ── Layout exclusivo JEFE_VENTA ── */}
+          <Route element={<ProtectedRoute roles={['ADMIN', 'JEFE_VENTA']} />}>
+            <Route element={<TiendaLayout />}>
+              <Route path="/tienda" element={<TiendaHomePage />} />
+              <Route path="/tienda/cuaderno" element={<TiendaCuadernoPage />} />
+              <Route path="/tienda/lista-dia" element={<TiendaListaDiaPage />} />
+              <Route path="/tienda/stock" element={<TiendaStockPage />} />
+              <Route path="/tienda/sincronizacion" element={<TiendaSincronizacionPage />} />
+              <Route path="/tienda/sincronizacion/historial" element={<TiendaHistorialPage />} />
+              <Route path="/tienda/sincronizacion/:id" element={<TiendaSincronizacionDetallePage />} />
+            </Route>
+          </Route>
+
+          <Route path="*" element={<SmartRedirect />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

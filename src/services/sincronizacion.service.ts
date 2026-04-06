@@ -1,9 +1,10 @@
 import api from '../lib/axios'
-import type { Sincronizacion, CreateSincronizacionDto, ResolverItemDto } from '../types'
+import type { Sincronizacion, CreateSincronizacionDto, ResolverItemDto, PaginatedResult } from '../types'
 
 export const sincronizacionService = {
+  // Backend devuelve PaginatedResult — extraemos solo el array de data
   getAll: () =>
-    api.get<Sincronizacion[]>('/sincronizacion').then(r => r.data),
+    api.get<PaginatedResult<Sincronizacion>>('/sincronizacion').then(r => r.data.data),
 
   getOne: (id: number) =>
     api.get<Sincronizacion>(`/sincronizacion/${id}`).then(r => r.data),

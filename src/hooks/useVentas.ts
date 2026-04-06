@@ -55,11 +55,12 @@ export function useCreateVenta() {
       sileo.success('Venta registrada correctamente')
     },
     onError: (error: any) => {
-      // El backend puede devolver 400 con mensaje de stock insuficiente
-      const msg: string = error?.response?.data?.message ?? ''
-      if (msg.toLowerCase().includes('stock')) {
+      // El backend puede devolver 400 con message como string o array (class-validator)
+      const raw = error?.response?.data?.message ?? ''
+      const msg = (Array.isArray(raw) ? raw.join(' ') : String(raw)).toLowerCase()
+      if (msg.includes('stock')) {
         sileo.error('Stock insuficiente para completar la venta')
-      } else if (msg.toLowerCase().includes('caja')) {
+      } else if (msg.includes('caja')) {
         sileo.error('No hay caja abierta — abrí la caja primero')
       } else {
         sileo.error('Error al registrar la venta')

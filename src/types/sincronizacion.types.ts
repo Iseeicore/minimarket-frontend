@@ -22,8 +22,8 @@ export interface Sincronizacion {
 export interface CreateSincronizacionDto {
   almacenId: number
   tipo: TipoSincronizacion
-  periodoDesde: string  // ISO date string
-  periodoHasta: string  // ISO date string
+  desde: string   // ISO date string — campo exacto del backend
+  hasta: string   // ISO date string — campo exacto del backend
 }
 
 // ── Ítem de reconciliación ────────────────────────────────────────────────────

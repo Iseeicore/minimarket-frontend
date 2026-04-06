@@ -77,9 +77,11 @@ export const qk = {
   },
   // Cuaderno del JEFE_ALMACEN
   registroAlmacen: {
-    all:          ['registro-almacen'] as const,
-    byAlmacen:    (almacenId: number) => ['registro-almacen', almacenId] as const,
-    detail:       (id: number)        => ['registro-almacen', 'detail', id] as const,
+    all:              ['registro-almacen'] as const,
+    byAlmacen:        (almacenId: number) => ['registro-almacen', almacenId] as const,
+    detail:           (id: number)        => ['registro-almacen', 'detail', id] as const,
+    pendientesTienda: (almacenId: number, horas: number) =>
+      ['registro-almacen', 'pendientes-tienda', almacenId, horas] as const,
   },
   // Cuaderno del JEFE_VENTA
   registroTienda: {

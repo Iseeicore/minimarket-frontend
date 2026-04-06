@@ -68,8 +68,8 @@ function FormNuevaSync({ onClose }: FormNuevaSincProps) {
       {
         almacenId: Number(almacenId),
         tipo,
-        periodoDesde: new Date(desde).toISOString(),
-        periodoHasta: new Date(hasta + 'T23:59:59').toISOString(),
+        desde: new Date(desde).toISOString(),
+        hasta: new Date(hasta + 'T23:59:59').toISOString(),
       },
       { onSuccess: onClose }
     )

@@ -1,9 +1,10 @@
 import api from '../lib/axios'
-import type { RegistroTienda, CreateRegistroTiendaDto } from '../types'
+import type { RegistroTienda, CreateRegistroTiendaDto, PaginatedResult } from '../types'
 
 export const registrosTiendaService = {
+  // Backend devuelve PaginatedResult — extraemos solo el array de data
   getAll: () =>
-    api.get<RegistroTienda[]>('/registros-tienda').then(r => r.data),
+    api.get<PaginatedResult<RegistroTienda>>('/registros-tienda').then(r => r.data.data),
 
   getOne: (id: number) =>
     api.get<RegistroTienda>(`/registros-tienda/${id}`).then(r => r.data),

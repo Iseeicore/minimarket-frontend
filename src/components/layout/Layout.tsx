@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, Navigate, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/auth.store'
 import {
   LayoutDashboard, Package, Tag, Warehouse, Users,
@@ -89,7 +89,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Reportes',
     items: [
       { to: '/lista-dia', label: 'Lista del día', icon: ClipboardList },
-      { to: '/bitacora',  label: 'Bitácora',      icon: BookOpen,      allowedRoles: ['ADMIN', 'ALMACENERO', 'JEFE_ALMACEN'] },
+      { to: '/bitacora',  label: 'Bitácora',      icon: BookOpen,      allowedRoles: ['ADMIN', 'ALMACENERO'] },
     ],
   },
   {
@@ -242,6 +242,10 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 // ── Layout principal ───────────────────────────────────────────
 export default function Layout() {
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const rol = useAuthStore(s => s.usuario?.rol)
+
+  // JEFE_VENTA tiene su propio layout — no pasa por acá
+  if (rol === 'JEFE_VENTA') return <Navigate to="/tienda" replace />
 
   return (
     <div className="flex h-screen bg-tin-pale">
@@ -291,7 +295,7 @@ export default function Layout() {
 
         {/* Página */}
         <main className="flex-1 overflow-auto">
-          <div className="p-4 sm:p-6">
+          <div className="p-4 sm:p-6 lg:p-8 xl:p-10">
             <Outlet />
           </div>
         </main>

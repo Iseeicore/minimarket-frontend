@@ -12,12 +12,16 @@ export function useRegistrosTienda() {
   })
 }
 
+// Clave parcial para invalidar todos los pendientes-tienda sin importar almacenId/horas
+const PENDIENTES_KEY = ['registro-almacen', 'pendientes-tienda'] as const
+
 export function useCreateRegistroTienda() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: CreateRegistroTiendaDto) => registrosTiendaService.create(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.registroTienda.all })
+      qc.invalidateQueries({ queryKey: PENDIENTES_KEY })
       sileo.success('Registro creado correctamente')
     },
     onError: () => sileo.error('Error al crear el registro'),
@@ -31,6 +35,7 @@ export function useMarcarDevueltoTienda() {
       registrosTiendaService.marcarDevuelto(id, notas),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.registroTienda.all })
+      qc.invalidateQueries({ queryKey: PENDIENTES_KEY })
       sileo.success('Registro marcado como devuelto')
     },
     onError: () => sileo.error('Error al marcar la devolución'),

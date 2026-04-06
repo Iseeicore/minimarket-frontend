@@ -8,7 +8,8 @@ export interface Devolucion {
   notas: string | null
   creadoEn: string
   items?: ItemDevolucion[]
-  venta?: { id: number; creadoEn: string; total: string }
+  venta?: { id: number; creadoEn: string; total: string; contacto?: { nombre: string } | null }
+  usuario?: { id: number; nombre: string; rol: string }
 }
 
 export interface ItemDevolucion {
@@ -19,6 +20,7 @@ export interface ItemDevolucion {
   tipoDescuento: TipoDescuento
   valorDescuento: string  // Decimal
   montoDevuelto: string   // Decimal
+  itemVenta?: { variante?: { nombre: string; sku: string | null } }
 }
 
 export interface CreateDevolucionDto {

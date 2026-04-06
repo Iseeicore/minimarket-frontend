@@ -19,6 +19,7 @@ export interface RegistroAlmacen {
 }
 
 export interface CreateRegistroAlmacenDto {
+  almacenId: number
   varianteId: number
   cantidad: number
   tipo: TipoMovRegistro
@@ -42,8 +43,25 @@ export interface RegistroTienda {
 }
 
 export interface CreateRegistroTiendaDto {
+  almacenId: number
   varianteId: number
   cantidad: number
   tipo: TipoMovRegistro
   notas?: string
+}
+
+// ── Pendientes de tienda ──────────────────────────────────────────────────────
+// Un ítem por variante: lo que salió del almacén vs lo que anotó el JEFE_VENTA
+export interface PendienteTienda {
+  varianteId:      number
+  cantidadAlmacen: number
+  cantidadTienda:  number
+  pendiente:       number
+  variante?: {
+    id:       number
+    nombre:   string
+    sku:      string | null
+    producto: { id: number; nombre: string }
+    unidad:   { id: number; abreviatura: string }
+  }
 }

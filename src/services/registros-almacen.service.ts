@@ -1,9 +1,10 @@
 import api from '../lib/axios'
-import type { RegistroAlmacen, CreateRegistroAlmacenDto } from '../types'
+import type { RegistroAlmacen, CreateRegistroAlmacenDto, PaginatedResult, PendienteTienda } from '../types'
 
 export const registrosAlmacenService = {
+  // Backend devuelve PaginatedResult — extraemos solo el array de data
   getAll: () =>
-    api.get<RegistroAlmacen[]>('/registros-almacen').then(r => r.data),
+    api.get<PaginatedResult<RegistroAlmacen>>('/registros-almacen').then(r => r.data.data),
 
   getByVenta: (ventaId: number) =>
     api.get<RegistroAlmacen[]>(`/registros-almacen/por-venta/${ventaId}`).then(r => r.data),
@@ -16,4 +17,9 @@ export const registrosAlmacenService = {
 
   marcarDevuelto: (id: number, notas?: string) =>
     api.patch<RegistroAlmacen>(`/registros-almacen/${id}/devolver`, { notas }).then(r => r.data),
+
+  getPendientesTienda: (almacenId: number, horas = 24) =>
+    api.get<PendienteTienda[]>(
+      `/registros-almacen/pendientes-tienda?almacenId=${almacenId}&horas=${horas}`,
+    ).then(r => r.data),
 }

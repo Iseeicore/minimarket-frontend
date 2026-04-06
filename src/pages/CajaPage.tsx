@@ -75,25 +75,19 @@ export default function CajaPage() {
   const crearMovMutation                   = useCrearMovimiento()
 
   // ── Modales ──────────────────────────────────────────────────
-  const [abrirModal, setAbrirModal]       = useState(false)
   const [cerrarModal, setCerrarModal]     = useState(false)
   const [movModal, setMovModal]           = useState(false)
 
   // ── Formularios ──────────────────────────────────────────────
-  const [montoApertura, setMontoApertura] = useState('')
   const [montoCierre, setMontoCierre]     = useState('')
   const [movForm, setMovForm]             = useState<{ tipo: TipoMovCaja; monto: string; descripcion: string }>({
     tipo: 'INGRESO', monto: '', descripcion: '',
   })
 
-  // ── Abrir caja ───────────────────────────────────────────────
-  function handleAbrir(e: React.FormEvent) {
-    e.preventDefault()
+  // ── Abrir caja (siempre con montoApertura 0 — sin modal) ─────
+  function handleAbrir() {
     if (!almacenId) return
-    abrirMutation.mutate(
-      { almacenId, montoApertura: parseFloat(montoApertura) },
-      { onSuccess: () => { setAbrirModal(false); setMontoApertura('') } }
-    )
+    abrirMutation.mutate({ almacenId, montoApertura: 0 })
   }
 
   // ── Cerrar caja ──────────────────────────────────────────────
@@ -136,15 +130,15 @@ export default function CajaPage() {
     <div className="max-w-2xl mx-auto space-y-6">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-bold text-gray-800">Caja</h1>
           {caja && (
             <p className="text-sm text-tin-dark mt-0.5">Abierta el {formatFecha(caja.abiertoEn)}</p>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Selector de almacén — solo visible para admin */}
           {isAdmin() && (
             <div className="relative">
@@ -167,23 +161,25 @@ export default function CajaPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => setMovModal(true)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-accent/20 hover:bg-accent/30 text-accent-dark text-sm font-semibold transition-all duration-150 active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-2 min-h-[2.75rem] rounded-xl bg-accent/20 hover:bg-accent/30 text-accent-dark text-sm font-semibold transition-all duration-150 active:scale-95"
               >
                 <Plus size={15} /> Movimiento
               </button>
               <button
                 onClick={() => setCerrarModal(true)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold transition-all duration-150 active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-2 min-h-[2.75rem] rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold transition-all duration-150 active:scale-95"
               >
                 <Lock size={15} /> Cerrar caja
               </button>
             </div>
           ) : (
             <button
-              onClick={() => setAbrirModal(true)}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white font-semibold text-sm transition-all duration-150 active:scale-95"
+              onClick={handleAbrir}
+              disabled={abrirMutation.isPending}
+              className="flex items-center gap-1.5 px-4 min-h-[2.75rem] rounded-xl bg-primary hover:bg-primary-dark text-gray-900 font-semibold text-sm transition-all duration-150 active:scale-95 disabled:opacity-50"
             >
-              <Unlock size={15} /> Abrir caja
+              {abrirMutation.isPending ? <Loader2 size={15} className="animate-spin" /> : <Unlock size={15} />}
+              {abrirMutation.isPending ? 'Abriendo...' : 'Abrir caja'}
             </button>
           ))}
         </div>
@@ -220,7 +216,7 @@ export default function CajaPage() {
             const totalEgresos   = movimientos.filter(m => m.tipo === 'EGRESO').reduce((acc, m) => acc + parseFloat(m.monto), 0)
             const saldoEstimado  = parseFloat(String(caja.montoApertura)) + totalIngresos - totalEgresos
             return (
-              <div className="bg-white rounded-2xl border border-tin/20 shadow-sm p-5 grid grid-cols-2 gap-4">
+              <div className="bg-white rounded-2xl border border-tin/20 shadow-sm p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
                     <Wallet size={20} className="text-primary-dark" />
@@ -306,51 +302,16 @@ export default function CajaPage() {
             No hay una caja abierta para este almacén. Abrí la caja para registrar ventas.
           </p>
           <button
-            onClick={() => setAbrirModal(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white font-semibold text-sm transition-all duration-150 active:scale-95"
+            onClick={handleAbrir}
+            disabled={abrirMutation.isPending}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white font-semibold text-sm transition-all duration-150 active:scale-95 disabled:opacity-50"
           >
-            <Unlock size={15} /> Abrir caja
+            {abrirMutation.isPending ? <Loader2 size={15} className="animate-spin" /> : <Unlock size={15} />}
+            {abrirMutation.isPending ? 'Abriendo...' : 'Abrir caja'}
           </button>
         </div>
       )}
 
-
-      {/* ── Modal abrir caja ── */}
-      <Modal open={abrirModal} onClose={() => setAbrirModal(false)} title="Abrir caja">
-        <form onSubmit={handleAbrir} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Monto de apertura (S/)</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={montoApertura}
-              onChange={e => setMontoApertura(e.target.value)}
-              placeholder="0.00"
-              className="w-full rounded-xl border border-tin/30 px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-              required
-              autoFocus
-            />
-            <p className="text-xs text-tin-dark mt-1">Ingresá el efectivo físico con el que abrís la caja.</p>
-          </div>
-          <div className="flex gap-2 pt-1">
-            <button
-              type="button"
-              onClick={() => setAbrirModal(false)}
-              className="flex-1 py-2.5 rounded-xl border border-tin/30 text-sm font-medium text-gray-700 hover:bg-tin-pale transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={abrirMutation.isPending}
-              className="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white font-semibold text-sm transition-all duration-150 active:scale-95 disabled:opacity-50"
-            >
-              {abrirMutation.isPending ? 'Abriendo...' : 'Abrir caja'}
-            </button>
-          </div>
-        </form>
-      </Modal>
 
       {/* ── Modal cerrar caja ── */}
       <Modal open={cerrarModal} onClose={() => setCerrarModal(false)} title="Cerrar caja">

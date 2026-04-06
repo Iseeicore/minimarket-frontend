@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Users, Plus, Pencil, UserX, Eye, EyeOff, ShieldCheck, Package, Loader2 } from 'lucide-react'
+import { Users, Plus, Pencil, UserX, Eye, EyeOff, ShieldCheck, Package, Store, Warehouse, Loader2 } from 'lucide-react'
 import { useUsuarios, useCreateUsuario, useUpdateUsuario, useDeleteUsuario } from '../hooks/useUsuarios'
 import { useAlmacenes } from '../hooks/useAlmacenes'
 import { useAuthStore } from '../store/auth.store'
@@ -13,14 +13,30 @@ function formatFecha(iso: string) {
   return new Date(iso).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
+/** Roles que requieren un almacén asignado */
+const ROLES_CON_ALMACEN: RolUsuario[] = ['ALMACENERO', 'JEFE_ALMACEN', 'JEFE_VENTA']
+
 const rolBadge: Record<RolUsuario, string> = {
-  ADMIN:       'bg-accent/20 text-accent-dark border border-accent-mid',
-  ALMACENERO:  'bg-primary-pale text-primary-dark border border-primary',
+  ADMIN:        'bg-accent/20 text-accent-dark border border-accent-mid',
+  JEFE_VENTA:   'bg-emerald-100 text-emerald-700 border border-emerald-300',
+  JEFE_ALMACEN: 'bg-blue-100 text-blue-700 border border-blue-300',
+  ALMACENERO:   'bg-primary-pale text-primary-dark border border-primary',
 }
 
 const rolLabel: Record<RolUsuario, string> = {
-  ADMIN:      'Admin',
-  ALMACENERO: 'Almacenero',
+  ADMIN:        'Admin',
+  JEFE_VENTA:   'Jefe Tienda',
+  JEFE_ALMACEN: 'Jefe Almacén',
+  ALMACENERO:   'Almacenero',
+}
+
+function RolIcon({ rol, size = 11 }: { rol: RolUsuario; size?: number }) {
+  switch (rol) {
+    case 'ADMIN':        return <ShieldCheck size={size} />
+    case 'JEFE_VENTA':   return <Store       size={size} />
+    case 'JEFE_ALMACEN': return <Warehouse   size={size} />
+    case 'ALMACENERO':   return <Package     size={size} />
+  }
 }
 
 // ── Tipo del formulario interno ────────────────────────────────
@@ -91,7 +107,8 @@ function FormUsuarioModal({ open, editingId, onClose }: FormModalProps) {
       const patch: UpdateUsuarioDto = {
         nombre:    form.nombre.trim(),
         rol:       form.rol,
-        almacenId: form.rol === 'ALMACENERO' ? Number(form.almacenId) || null : null,
+        // Roles que trabajan en un almacén específico envían almacenId; ADMIN no
+        almacenId: ROLES_CON_ALMACEN.includes(form.rol) ? Number(form.almacenId) || null : null,
       }
       // Solo enviar password si el campo no está vacío
       if (form.password.trim()) patch.password = form.password
@@ -103,7 +120,7 @@ function FormUsuarioModal({ open, editingId, onClose }: FormModalProps) {
         email:    form.email.trim(),
         password: form.password,
         rol:      form.rol,
-        ...(form.rol === 'ALMACENERO' && form.almacenId
+        ...(ROLES_CON_ALMACEN.includes(form.rol) && form.almacenId
           ? { almacenId: Number(form.almacenId) }
           : {}),
       }
@@ -192,12 +209,14 @@ function FormUsuarioModal({ open, editingId, onClose }: FormModalProps) {
             className={inputCls}
           >
             <option value="ALMACENERO">Almacenero</option>
+            <option value="JEFE_ALMACEN">Jefe Almacén</option>
+            <option value="JEFE_VENTA">Jefe Tienda</option>
             <option value="ADMIN">Admin</option>
           </select>
         </div>
 
-        {/* Almacén — solo si rol = ALMACENERO */}
-        {form.rol === 'ALMACENERO' && (
+        {/* Almacén — requerido para ALMACENERO, JEFE_ALMACEN y JEFE_VENTA */}
+        {ROLES_CON_ALMACEN.includes(form.rol) && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Almacén</label>
             <select
@@ -336,10 +355,7 @@ export default function UsuariosPage() {
                       <td className="px-5 py-3 text-gray-600">{u.email}</td>
                       <td className="px-5 py-3">
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${rolBadge[u.rol]}`}>
-                          {u.rol === 'ADMIN'
-                            ? <ShieldCheck size={11} />
-                            : <Package size={11} />
-                          }
+                          <RolIcon rol={u.rol} size={11} />
                           {rolLabel[u.rol]}
                         </span>
                       </td>
@@ -425,7 +441,7 @@ export default function UsuariosPage() {
 
                   <div className="flex items-center gap-2 mt-3 flex-wrap">
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${rolBadge[u.rol]}`}>
-                      {u.rol === 'ADMIN' ? <ShieldCheck size={10} /> : <Package size={10} />}
+                      <RolIcon rol={u.rol} size={10} />
                       {rolLabel[u.rol]}
                     </span>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
