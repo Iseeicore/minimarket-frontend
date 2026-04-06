@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/* ── Design Tokens ──────────────────────────────────────────── */
+@theme {
+  /* Verde limón */
+  --color-primary:      #a3e635;
+  --color-primary-dark: #84cc16;
+  --color-primary-pale: #ecfccb;
+
+  /* Cyan pálido */
+  --color-accent:       #a5f3fc;
+  --color-accent-mid:   #67e8f9;
+  --color-accent-dark:  #0891b2;
+
+  /* Gris estaño */
+  --color-tin:          #94a3b8;
+  --color-tin-dark:     #64748b;
+  --color-tin-pale:     #f1f5f9;
+
+  /* Tipografía */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Base global ────────────────────────────────────────────── */
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Sileo — tema negro ─────────────────────────────────────── */
+/* Override para todas las versiones posibles del selector de sileo */
+.sileo-toast,
+[class*="sileo-toast"],
+[data-sileo-toast] {
+  background-color: #111827 !important;
+  color: #f9fafb !important;
+  border: 1px solid #1f2937 !important;
+  border-radius: 0.625rem !important;
+  box-shadow: 0 0.625rem 1.5rem -0.25rem rgb(0 0 0 / 0.6) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.875rem !important;
+}
+
+/* Ícono success → verde limón */
+.sileo-toast[data-type="success"] svg,
+.sileo-success svg { color: #a3e635 !important; }
+
+/* Ícono error → rojo */
+.sileo-toast[data-type="error"] svg,
+.sileo-error svg { color: #f87171 !important; }
+
+/* Ícono warning → amber */
+.sileo-toast[data-type="warning"] svg,
+.sileo-warning svg { color: #fbbf24 !important; }
+
+/* Ícono info → cyan */
+.sileo-toast[data-type="info"] svg,
+.sileo-info svg { color: #67e8f9 !important; }
