@@ -56,6 +56,82 @@ class PrinterService {
     return typeof navigator !== 'undefined' && 'bluetooth' in navigator
   }
 
+  // ── Reconectar — sin popup, usa dispositivo previamente autorizado ──
+  async reconnect(): Promise<boolean> {
+    if (!this.isSupported) {
+      this.emit('error', null, 'Web Bluetooth no soportado')
+      return false
+    }
+
+    // getDevices() requiere Chrome 85+ y el flag getDevices disponible
+    if (!('getDevices' in navigator.bluetooth)) {
+      this.emit('disconnected', null, 'Reconexión no soportada en este navegador')
+      return false
+    }
+
+    try {
+      this.emit('connecting', null, 'Buscando dispositivo guardado...')
+
+      const devices = await navigator.bluetooth.getDevices()
+      const savedName = localStorage.getItem('printer_name')
+
+      // Buscar el dispositivo guardado por nombre, o tomar el primero disponible
+      const target = savedName
+        ? devices.find(d => d.name === savedName) ?? devices[0]
+        : devices[0]
+
+      if (!target) {
+        this.emit('disconnected', null, 'No hay dispositivos guardados')
+        return false
+      }
+
+      const name = target.name ?? 'Impresora BT'
+      this.emit('connecting', name, 'Reconectando...')
+
+      // Escuchar desconexión
+      target.addEventListener('gattserverdisconnected', () => {
+        this.characteristic = null
+        this.emit('disconnected', null, 'Impresora desconectada')
+      })
+
+      this.device = target
+      const server = await target.gatt!.connect()
+      this.emit('connecting', name, 'Buscando servicio de impresion...')
+
+      this.characteristic = await this.findWritableCharacteristic(server, name)
+
+      if (!this.characteristic) {
+        target.gatt?.disconnect()
+        this.emit('error', name, 'No se encontro servicio de impresion')
+        return false
+      }
+
+      console.log('[Printer] Reconectada:', {
+        device: name,
+        service: this.characteristic.service.uuid,
+        characteristic: this.characteristic.uuid,
+      })
+
+      localStorage.setItem('printer_name', name)
+      this.emit('connected', name, 'Reconectada')
+      return true
+    } catch (err) {
+      const msg = (err as Error)?.message ?? 'Error al reconectar'
+      console.warn('[Printer] Reconexión falló:', msg)
+      this.emit('disconnected', null, 'No se pudo reconectar — conectá manualmente')
+      return false
+    }
+  }
+
+  /** Indica si hay un dispositivo previamente conectado guardado */
+  get hasSavedDevice(): boolean {
+    return !!localStorage.getItem('printer_name')
+  }
+
+  get savedDeviceName(): string | null {
+    return localStorage.getItem('printer_name')
+  }
+
   // ── Conectar — popup nativo del browser ──
   async connect(): Promise<boolean> {
     if (!this.isSupported) {

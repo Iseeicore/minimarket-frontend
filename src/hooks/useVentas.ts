@@ -14,11 +14,11 @@ export function useVentas() {
   })
 }
 
-/** Ventas del día actual. refetchInterval para mantener actualizado. */
-export function useVentasHoy() {
+/** Ventas del día actual, filtradas por almacén si se pasa. */
+export function useVentasHoy(almacenId?: number) {
   return useQuery({
-    queryKey: qk.ventas.hoy,
-    queryFn: ventasService.getHoy,
+    queryKey: qk.ventas.hoy(almacenId),
+    queryFn: () => ventasService.getHoy(almacenId),
     staleTime: 1000 * 30,
     refetchInterval: 1000 * 60,
   })
@@ -47,7 +47,7 @@ export function useCreateVenta() {
     mutationFn: (data: CreateVentaDto) => ventasService.create(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.ventas.all })
-      qc.invalidateQueries({ queryKey: qk.ventas.hoy })
+      qc.invalidateQueries({ queryKey: ['ventas', 'hoy'] })
       if (almacenId) {
         qc.invalidateQueries({ queryKey: qk.stock.byAlmacen(almacenId) })
         qc.invalidateQueries({ queryKey: qk.caja.activa(almacenId) })

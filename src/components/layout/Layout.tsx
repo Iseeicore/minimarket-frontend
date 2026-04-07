@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Package, Tag, Warehouse, Users,
   ShoppingCart, Receipt, CreditCard, RotateCcw,
   ClipboardList, BookOpen, LogOut, Store, Ruler,
-  Boxes, UserCog, Contact, Menu, X, GitCompare,
+  Boxes, UserCog, Contact, Menu, X, GitCompare, FileSpreadsheet,
   type LucideIcon,
 } from 'lucide-react'
 import type { RolUsuario } from '../../types'
@@ -96,8 +96,9 @@ const NAV_GROUPS: NavGroup[] = [
     label:     'Configuración',
     adminOnly: true,
     items: [
-      { to: '/almacenes', label: 'Almacenes', icon: Warehouse },
-      { to: '/usuarios',  label: 'Usuarios',  icon: UserCog   },
+      { to: '/almacenes',           label: 'Almacenes',     icon: Warehouse       },
+      { to: '/usuarios',            label: 'Usuarios',      icon: UserCog         },
+      { to: '/admin/carga-masiva',  label: 'Carga masiva',  icon: FileSpreadsheet },
     ],
   },
 ]

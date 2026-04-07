@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { qk } from '../lib/query-keys'
 import { dashboardService } from '../services/dashboard.service'
+import { todayLocal } from '../lib/date'
 
 /** Devuelve YYYY-MM-DD de hoy en hora local */
 function fechaHoy(): string {
-  return new Date().toISOString().slice(0, 10)
+  return todayLocal()
 }
 
 /** True si la fecha es anterior a hoy — esos datos no van a cambiar nunca */

@@ -4,6 +4,7 @@ import { GitCompare, Plus, Loader2, ChevronRight, ChevronDown } from 'lucide-rea
 import { useSincronizaciones, useEjecutarSincronizacion } from '../hooks/useSincronizacion'
 import { useAlmacenes } from '../hooks/useAlmacenes'
 import { useAuthStore } from '../store/auth.store'
+import { getLocalISO } from '../lib/date'
 import Modal from '../components/shared/Modal'
 import EmptyState from '../components/shared/EmptyState'
 import type { TipoSincronizacion, EstadoSincronizacion } from '../types'
@@ -47,8 +48,8 @@ interface FormNuevaSincProps {
   onClose: () => void
 }
 function FormNuevaSync({ onClose }: FormNuevaSincProps) {
-  const hoy    = new Date().toISOString().slice(0, 10)
-  const ayer   = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+  const hoy    = getLocalISO()
+  const ayer   = getLocalISO(new Date(Date.now() - 86400000))
 
   const { data: almacenes = [] }      = useAlmacenes()
   const usuario                       = useAuthStore(s => s.usuario)

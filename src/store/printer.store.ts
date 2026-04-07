@@ -14,8 +14,10 @@ interface PrinterState {
   detail: string
   isSupported: boolean
   isPrinting: boolean
+  hasSavedDevice: boolean
 
   connect: () => Promise<boolean>
+  reconnect: () => Promise<boolean>
   disconnect: () => void
   printOrden: (orden: OrdenSalida) => Promise<void>
   printTest: () => Promise<void>
@@ -42,11 +44,13 @@ export const usePrinterStore = create<PrinterState>((set) => {
     detail: '',
     isSupported: printerService.isSupported,
     isPrinting: false,
+    hasSavedDevice: printerService.hasSavedDevice,
 
     async connect() {
       try {
         const ok = await printerService.connect()
         if (ok) {
+          set({ hasSavedDevice: true })
           sileo.success(`Impresora "${printerService.deviceName}" conectada`)
         }
         return ok
@@ -57,8 +61,23 @@ export const usePrinterStore = create<PrinterState>((set) => {
       }
     },
 
+    async reconnect() {
+      try {
+        const ok = await printerService.reconnect()
+        if (ok) {
+          sileo.success(`Reconectada: "${printerService.deviceName}"`)
+        }
+        return ok
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Error desconocido'
+        sileo.error(`Error al reconectar: ${msg}`)
+        return false
+      }
+    },
+
     disconnect() {
       printerService.disconnect()
+      set({ hasSavedDevice: false })
       sileo.info('Impresora desconectada')
     },
 

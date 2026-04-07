@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { ListOrdered, Layers, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useListaDiaCruda, useListaDia } from '../hooks/useListaDia'
+import { todayLocal } from '../lib/date'
 import type { FilaOrganizadaDia } from '../types'
 
 function fechaHoy() {
-  return new Date().toISOString().slice(0, 10)
+  return todayLocal()
 }
 
 // ── Helpers ────────────────────────────────────────────────────

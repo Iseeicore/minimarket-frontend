@@ -1,15 +1,17 @@
-import { useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   TrendingUp, AlertTriangle, Wallet, Loader2,
-  CheckCircle2, XCircle, Package, ArrowRight,
+  CheckCircle2, XCircle, Package, ArrowRight, Warehouse,
 } from 'lucide-react'
 import { useVentasHoy } from '../hooks/useVentas'
 import { useStockByAlmacen } from '../hooks/useStock'
-import { useCajaActiva } from '../hooks/useCaja'
+import { useCajaActiva, useCajas } from '../hooks/useCaja'
+import { useAlmacenes } from '../hooks/useAlmacenes'
 import { useAuthStore } from '../store/auth.store'
 
-// ── Helpers ────────────────────────────────────────────────────
+// -- Helpers ------------------------------------------------------------------
+
 function fmt(n: number) {
   return n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
@@ -23,20 +25,48 @@ function saludo() {
   return 'Buenas noches'
 }
 
-// ── Dashboard ──────────────────────────────────────────────────
-export default function DashboardPage() {
-  const navigate       = useNavigate()
-  const { usuario }    = useAuthStore()
-  const almacenId      = usuario?.almacenId ?? null
-  const nombre         = usuario?.nombre?.split(' ')[0] ?? ''
+// -- Dashboard ----------------------------------------------------------------
 
-  const { data: ventasHoy  = [], isLoading: loadingVentas } = useVentasHoy()
+export default function DashboardPage() {
+  const navigate    = useNavigate()
+  const { usuario, isAdmin } = useAuthStore()
+  const nombre      = usuario?.nombre?.split(' ')[0] ?? ''
+
+  // -- Selector de almacén (solo ADMIN) --
+  const { data: almacenes = [] } = useAlmacenes()
+  const { data: cajas = [] }     = useCajas()
+
+  // IDs de almacenes con caja abierta
+  const almacenesConCaja = useMemo(() => {
+    const ids = new Set<number>()
+    for (const c of cajas) {
+      if (c.estado === 'ABIERTA') ids.add(c.almacenId)
+    }
+    return ids
+  }, [cajas])
+
+  const [selectedAlmacenId, setSelectedAlmacenId] = useState<number | null>(
+    usuario?.almacenId ?? null,
+  )
+
+  // Auto-select: cuando llegan los almacenes, elegir el que tiene caja abierta
+  useEffect(() => {
+    if (!isAdmin() || selectedAlmacenId) return
+    if (almacenes.length === 0) return
+
+    const conCaja = almacenes.find((a) => almacenesConCaja.has(a.id))
+    setSelectedAlmacenId(conCaja?.id ?? almacenes[0]?.id ?? null)
+  }, [almacenes, almacenesConCaja, isAdmin, selectedAlmacenId])
+
+  // -- Queries filtradas por almacén seleccionado --
+  const almacenId = selectedAlmacenId
+  const { data: ventasHoy  = [], isLoading: loadingVentas } = useVentasHoy(almacenId ?? undefined)
   const { data: stockItems = [], isLoading: loadingStock  } = useStockByAlmacen(almacenId)
   const { data: caja,            isLoading: loadingCaja   } = useCajaActiva(almacenId)
 
-  // ── Derivados ──────────────────────────────────────────────
-  const totalHoy  = ventasHoy.reduce((acc, v) => acc + parseFloat(v.total), 0)
-  const txnsHoy   = ventasHoy.length
+  // -- Derivados --
+  const totalHoy    = ventasHoy.reduce((acc, v) => acc + parseFloat(v.total), 0)
+  const txnsHoy     = ventasHoy.length
   const cajaAbierta = !!caja
 
   const bajosMinimo = stockItems.filter(s => s.cantidad < (s.variante?.stockMinimo ?? 0))
@@ -68,6 +98,14 @@ export default function DashboardPage() {
     return Object.entries(mapa).sort((a, b) => b[1] - a[1])
   }, [ventasHoy])
 
+  if (!almacenId && isAdmin() && almacenes.length === 0) {
+    return (
+      <div className="flex justify-center items-center py-24">
+        <Loader2 size={32} className="animate-spin text-tin" />
+      </div>
+    )
+  }
+
   if (loadingVentas || loadingStock || loadingCaja) {
     return (
       <div className="flex justify-center items-center py-24">
@@ -76,17 +114,18 @@ export default function DashboardPage() {
     )
   }
 
+  // -- JSX --
   return (
     <div className="space-y-5 w-full">
 
-      {/* ── Header ── */}
+      {/* -- Header -- */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold text-tin uppercase tracking-widest mb-1">
             {new Date().toLocaleDateString('es-PE', { weekday: 'long', day: '2-digit', month: 'long' })}
           </p>
           <h1 className="text-2xl font-bold text-gray-800">
-            {saludo()}{nombre ? `, ${nombre}` : ''} 👋
+            {saludo()}{nombre ? `, ${nombre}` : ''}
           </h1>
         </div>
         <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold shrink-0 border ${
@@ -99,7 +138,26 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Alerta stock bajo mínimo ── */}
+      {/* -- Selector de almacén (solo ADMIN) -- */}
+      {isAdmin() && almacenes.length > 0 && (
+        <div className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-tin/20 shadow-sm">
+          <Warehouse size={18} className="text-tin-dark shrink-0" />
+          <label className="text-sm font-medium text-gray-700 shrink-0">Almacén</label>
+          <select
+            value={almacenId ?? ''}
+            onChange={(e) => setSelectedAlmacenId(+e.target.value)}
+            className="flex-1 text-sm font-medium text-gray-900 bg-tin-pale/50 border border-tin/20 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40 min-h-[2.75rem]"
+          >
+            {almacenes.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.nombre} {almacenesConCaja.has(a.id) ? '● Caja abierta' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* -- Alerta stock bajo mínimo -- */}
       {bajosMinimo.length > 0 && (
         <button
           onClick={() => navigate('/stock')}
@@ -119,7 +177,7 @@ export default function DashboardPage() {
         </button>
       )}
 
-      {/* ── Hero metric + stats secundarias ── */}
+      {/* -- Hero metric + stats secundarias -- */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
         {/* Ventas del día — hero */}
@@ -174,7 +232,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Fila secundaria ── */}
+      {/* -- Fila secundaria -- */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white rounded-2xl border border-tin/20 shadow-sm p-4">
           <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Inventario</p>
@@ -199,7 +257,6 @@ export default function DashboardPage() {
             <p className="text-xs text-tin mt-0.5">hoy</p>
           </div>
         ))}
-        {/* Pad con vacío si no hay suficientes métodos */}
         {metodoPagoResumen.length === 0 && (
           <>
             <div className="bg-white rounded-2xl border border-tin/20 shadow-sm p-4">
@@ -216,7 +273,7 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* ── Contenido principal ── */}
+      {/* -- Contenido principal -- */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 
         {/* Top vendidos — 3 cols */}
@@ -293,7 +350,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Artículos a reabastecer ── */}
+      {/* -- Artículos a reabastecer -- */}
       {bajosMinimo.length > 0 && (
         <div className="bg-white rounded-2xl border border-amber-200 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-amber-100 flex items-center justify-between">
