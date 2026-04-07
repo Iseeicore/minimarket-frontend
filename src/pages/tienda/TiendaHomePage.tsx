@@ -4,6 +4,7 @@ import { useVentasHoy } from '../../hooks/useVentas'
 import { useOrdenesSalidaPaginado } from '../../hooks/useOrdenesSalida'
 import { useCajaActiva } from '../../hooks/useCaja'
 import { useAuthStore } from '../../store/auth.store'
+import { todayLocal } from '../../lib/date'
 
 function formatMoney(n: number) {
   return n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -14,7 +15,7 @@ export default function TiendaHomePage() {
   const usuario   = useAuthStore(s => s.usuario)
   const almacenId = usuario?.almacenId ?? null
 
-  const hoy = new Date().toISOString().slice(0, 10)
+  const hoy = todayLocal()
 
   const { data: ventasHoy = [], isLoading: loadingVentas } = useVentasHoy()
   const { data: ordenesData }  = useOrdenesSalidaPaginado({

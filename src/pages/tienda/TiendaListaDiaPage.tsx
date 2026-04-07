@@ -3,14 +3,7 @@ import { useRegistrosTiendaPaginado } from '../../hooks/useRegistrosTienda'
 import { useRegistrosAlmacenPaginado, usePendientesTienda } from '../../hooks/useRegistrosAlmacen'
 import { PanelPendientes } from '../../components/shared/PanelPendientes'
 import { useAuthStore } from '../../store/auth.store'
-
-// ── Helpers ────────────────────────────────────────────────────
-function getLocalISO(date: Date = new Date()): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
+import { getLocalISO } from '../../lib/date'
 
 // ── Tipos locales ──────────────────────────────────────────────
 interface FilaComparativa {

@@ -1,12 +1,21 @@
-import { Bluetooth, BluetoothOff, Loader2, Printer, CheckCircle, XCircle, Wifi } from 'lucide-react'
+import { Bluetooth, BluetoothOff, Loader2, Printer, CheckCircle, XCircle, Wifi, RefreshCw } from 'lucide-react'
 import { usePrinterStore } from '../../store/printer.store'
 
 export default function TiendaImpresora() {
   const printer = usePrinterStore()
 
-  // Toasts se manejan en el store — no duplicar aca
   async function handleConnect() {
     try { await printer.connect() } catch { /* store notifica */ }
+  }
+
+  async function handleReconnect() {
+    try {
+      const ok = await printer.reconnect()
+      if (!ok) {
+        // Si falla reconexion, caer al flujo manual
+        await printer.connect()
+      }
+    } catch { /* store notifica */ }
   }
 
   function handleDisconnect() {
@@ -69,7 +78,12 @@ export default function TiendaImpresora() {
             {connecting && printer.detail && (
               <p className="text-sm text-amber-600 mt-0.5">{printer.detail}</p>
             )}
-            {!connected && !connecting && (
+            {!connected && !connecting && printer.hasSavedDevice && printer.deviceName && (
+              <p className="text-sm text-tin mt-0.5">
+                Ultima: <span className="font-medium text-slate-600">{printer.deviceName}</span>
+              </p>
+            )}
+            {!connected && !connecting && !printer.hasSavedDevice && (
               <p className="text-sm text-tin mt-0.5">
                 {printer.detail || 'Bluetooth no activo'}
               </p>
@@ -91,14 +105,33 @@ export default function TiendaImpresora() {
       {/* Acciones */}
       <div className="space-y-3">
         {!connected ? (
-          <button
-            onClick={handleConnect}
-            disabled={connecting || !printer.isSupported}
-            className="w-full min-h-[3rem] flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-slate-900 font-bold text-base rounded-2xl shadow-md shadow-primary/20 active:scale-[0.98] transition-all duration-150 disabled:opacity-40"
-          >
-            <Bluetooth size={18} />
-            {connecting ? 'Buscando...' : 'Conectar Impresora'}
-          </button>
+          <>
+            {/* Reconexion rapida — solo si hay dispositivo guardado */}
+            {printer.hasSavedDevice && (
+              <button
+                onClick={handleReconnect}
+                disabled={connecting || !printer.isSupported}
+                className="w-full min-h-[3rem] flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-slate-900 font-bold text-base rounded-2xl shadow-md shadow-primary/20 active:scale-[0.98] transition-all duration-150 disabled:opacity-40"
+              >
+                <RefreshCw size={18} />
+                {connecting ? 'Reconectando...' : `Reconectar "${printer.deviceName}"`}
+              </button>
+            )}
+
+            {/* Busqueda manual — secundario si hay dispositivo, primario si no */}
+            <button
+              onClick={handleConnect}
+              disabled={connecting || !printer.isSupported}
+              className={`w-full flex items-center justify-center gap-2 font-bold rounded-2xl active:scale-[0.98] transition-all duration-150 disabled:opacity-40 ${
+                printer.hasSavedDevice
+                  ? 'min-h-[2.75rem] bg-tin-pale hover:bg-slate-200 text-tin-dark text-sm'
+                  : 'min-h-[3rem] bg-primary hover:bg-primary-dark text-slate-900 text-base shadow-md shadow-primary/20'
+              }`}
+            >
+              <Bluetooth size={18} />
+              {connecting && !printer.hasSavedDevice ? 'Buscando...' : 'Buscar nueva impresora'}
+            </button>
+          </>
         ) : (
           <>
             <button
@@ -124,11 +157,21 @@ export default function TiendaImpresora() {
       <div className="bg-white rounded-2xl border border-tin/20 p-5 space-y-3">
         <p className="text-sm font-bold text-slate-800">Como conectar</p>
         <ol className="text-sm text-tin-dark space-y-2 list-decimal list-inside">
-          <li>Encende la impresora termica</li>
-          <li>Activa Bluetooth en tu dispositivo</li>
-          <li>Toca <span className="font-bold text-slate-700">Conectar Impresora</span></li>
-          <li>Selecciona tu impresora en el popup</li>
-          <li>Ingresa el PIN si lo pide (generalmente 1234 o 0000)</li>
+          {printer.hasSavedDevice ? (
+            <>
+              <li>Encende la impresora termica</li>
+              <li>Toca <span className="font-bold text-slate-700">Reconectar</span> — se conecta sin popup</li>
+              <li>Si falla, usa <span className="font-bold text-slate-700">Buscar nueva impresora</span></li>
+            </>
+          ) : (
+            <>
+              <li>Encende la impresora termica</li>
+              <li>Activa Bluetooth en tu dispositivo</li>
+              <li>Toca <span className="font-bold text-slate-700">Buscar nueva impresora</span></li>
+              <li>Selecciona tu impresora en el popup</li>
+              <li>Ingresa el PIN si lo pide (generalmente 1234 o 0000)</li>
+            </>
+          )}
           <li>Toca <span className="font-bold text-slate-700">Imprimir Ticket de Prueba</span> para verificar</li>
         </ol>
       </div>
@@ -138,6 +181,7 @@ export default function TiendaImpresora() {
         <p className="text-xs font-bold text-tin-dark">Info tecnica</p>
         <p className="text-xs text-tin">Formato: ESC/POS 58mm (32 chars/linea)</p>
         <p className="text-xs text-tin">Conexion: Web Bluetooth (Chrome/Edge)</p>
+        <p className="text-xs text-tin">Reconexion: getDevices() — sin popup en Chrome 85+</p>
         <p className="text-xs text-tin">Fallback: window.print() si no hay BT</p>
       </div>
     </div>

@@ -5,18 +5,11 @@ import {
 } from 'lucide-react'
 import { useRegistrosTiendaPaginado, useRegistrosTiendaConteo, useResumenDia } from '../../hooks/useRegistrosTienda'
 import { useAuthStore } from '../../store/auth.store'
+import { getLocalISO } from '../../lib/date'
 import type { RegistroTienda } from '../../types'
 
 
 // -- Helpers --
-
-/** Fecha local en formato yyyy-mm-dd — evita el desfase UTC en servidores. */
-function getLocalISO(date: Date = new Date()): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
 
 const TODAY_ISO = getLocalISO()
 

@@ -31,6 +31,7 @@ import TiendaVentasPage from './pages/tienda/TiendaVentasPage'
 import TiendaStockPage from './pages/tienda/TiendaStockPage'
 import TiendaImpresora from './pages/tienda/TiendaImpresora'
 import TiendaTicketsPage from './pages/tienda/TiendaTicketsPage'
+import CargaMasivaPage from './pages/CargaMasivaPage'
 
 /** Redirige según rol: JEFE_VENTA → /tienda, resto → /dashboard */
 function SmartRedirect() {
@@ -90,6 +91,7 @@ export default function App() {
                 <Route path="/almacenes" element={<AlmacenesPage />} />
                 <Route path="/unidades-medida" element={<UnidadesMedidaPage />} />
                 <Route path="/usuarios" element={<UsuariosPage />} />
+                <Route path="/admin/carga-masiva" element={<CargaMasivaPage />} />
               </Route>
             </Route>
           </Route>

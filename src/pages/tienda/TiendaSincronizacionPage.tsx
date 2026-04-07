@@ -189,7 +189,7 @@ export default function TiendaSincronizacionPage() {
       )}
 
       {/* ── Empty state ── */}
-      {sincs.length === 0 && (
+      {recientes.length === 0 && (
         <div className="bg-white rounded-2xl border border-tin/20 p-8 text-center">
           <GitCompare size={36} className="mx-auto text-tin mb-3" />
           <p className="font-semibold text-slate-700">Sin comparaciones aún</p>

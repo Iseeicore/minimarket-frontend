@@ -6,16 +6,10 @@ import {
 import { useAuthStore } from '../../store/auth.store'
 import { usePrinterStore } from '../../store/printer.store'
 import { useOrdenesSalidaPaginado } from '../../hooks/useOrdenesSalida'
+import { getLocalISO } from '../../lib/date'
 import type { OrdenSalida } from '../../types'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-
-function getLocalISO(date: Date = new Date()): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
 
 const TODAY_ISO = getLocalISO()
 
