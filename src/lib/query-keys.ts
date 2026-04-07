@@ -33,7 +33,10 @@ export const qk = {
   },
   ventas: {
     all: ['ventas'] as const,
-    hoy: ['ventas', 'hoy'] as const,
+    hoy: (almacenId?: number) =>
+      almacenId
+        ? ['ventas', 'hoy', almacenId] as const
+        : ['ventas', 'hoy'] as const,
     detail: (id: number) => ['ventas', id] as const,
   },
   caja: {
