@@ -1,8 +1,18 @@
 import api from '../lib/axios'
 import type { Sincronizacion, CreateSincronizacionDto, ResolverItemDto, PaginatedResult } from '../types'
 
+export interface SincronizacionFilters {
+  page?: number
+  limit?: number
+  almacenId?: number
+}
+
 export const sincronizacionService = {
-  // Backend devuelve PaginatedResult — extraemos solo el array de data
+  /** Paginado con filtros — devuelve { data, meta } */
+  getPaginated: (filters: SincronizacionFilters = {}) =>
+    api.get<PaginatedResult<Sincronizacion>>('/sincronizacion', { params: filters }).then(r => r.data),
+
+  /** Legacy — trae sin paginar */
   getAll: () =>
     api.get<PaginatedResult<Sincronizacion>>('/sincronizacion').then(r => r.data.data),
 

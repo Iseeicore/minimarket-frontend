@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../lib/query-keys'
 import { cajaService } from '../services/caja.service'
-import type { AbrirCajaDto, CerrarCajaDto, CreateMovimientoCajaDto } from '../types'
+import type { AbrirCajaDto, CerrarCajaDto, CreateMovimientoCajaDto, EstadoCajaResponse } from '../types'
 import { sileo } from 'sileo'
 
 /** Lista todas las cajas (admin). */
@@ -25,6 +25,38 @@ export function useCajaActiva(almacenId: number | null | undefined) {
     staleTime: 1000 * 30,
     refetchInterval: 1000 * 60,
     retry: false, // 404 cuando no hay caja abierta — no reintentar
+  })
+}
+
+/**
+ * Estado de caja del almacén: ABIERTA_HOY, ABIERTA_DIA_ANTERIOR, CERRADA.
+ * Incluye la caja actual/última y si requiere acción del usuario.
+ */
+export function useEstadoCaja(almacenId: number | null | undefined) {
+  return useQuery<EstadoCajaResponse>({
+    queryKey: qk.caja.estado(almacenId ?? 0),
+    queryFn: () => cajaService.getEstado(almacenId!),
+    enabled: !!almacenId,
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 60,
+  })
+}
+
+/**
+ * Pipeline: cierra caja huérfana si existe + abre caja del día.
+ * Idempotente — si ya hay caja abierta hoy, retorna esa.
+ */
+export function useAbrirDia() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (almacenId: number) => cajaService.abrirDia(almacenId),
+    onSuccess: (caja) => {
+      qc.invalidateQueries({ queryKey: qk.caja.all })
+      qc.invalidateQueries({ queryKey: qk.caja.activa(caja.almacenId) })
+      qc.invalidateQueries({ queryKey: qk.caja.estado(caja.almacenId) })
+      sileo.success('Caja abierta para hoy')
+    },
+    onError: () => sileo.error('Error al abrir la caja'),
   })
 }
 

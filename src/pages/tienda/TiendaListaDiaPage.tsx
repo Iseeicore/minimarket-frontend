@@ -1,18 +1,15 @@
 import { Loader2, ClipboardList, CheckCircle2, AlertCircle } from 'lucide-react'
-import { useRegistrosTienda } from '../../hooks/useRegistrosTienda'
-import { useRegistrosAlmacen, usePendientesTienda } from '../../hooks/useRegistrosAlmacen'
+import { useRegistrosTiendaPaginado } from '../../hooks/useRegistrosTienda'
+import { useRegistrosAlmacenPaginado, usePendientesTienda } from '../../hooks/useRegistrosAlmacen'
 import { PanelPendientes } from '../../components/shared/PanelPendientes'
 import { useAuthStore } from '../../store/auth.store'
 
 // ── Helpers ────────────────────────────────────────────────────
-function esHoy(isoString: string): boolean {
-  const fecha = new Date(isoString)
-  const hoy   = new Date()
-  return (
-    fecha.getFullYear() === hoy.getFullYear() &&
-    fecha.getMonth()    === hoy.getMonth()    &&
-    fecha.getDate()     === hoy.getDate()
-  )
+function getLocalISO(date: Date = new Date()): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
 }
 
 // ── Tipos locales ──────────────────────────────────────────────
@@ -28,16 +25,23 @@ interface FilaComparativa {
 // ── Página ────────────────────────────────────────────────────
 export default function TiendaListaDiaPage() {
   const almacenId = useAuthStore(s => s.usuario?.almacenId ?? null)
+  const hoy = getLocalISO()
 
-  const { data: regTienda  = [], isLoading: loadT } = useRegistrosTienda()
-  const { data: regAlmacen = [], isLoading: loadA } = useRegistrosAlmacen()
-  const { data: pendientes = [] }                   = usePendientesTienda(almacenId)
+  const { data: regTiendaData, isLoading: loadT }  = useRegistrosTiendaPaginado({
+    almacenId: almacenId ?? undefined, desde: hoy, hasta: hoy, limit: 200,
+  })
+  const { data: regAlmacenData, isLoading: loadA }  = useRegistrosAlmacenPaginado({
+    almacenId: almacenId ?? undefined, desde: hoy, hasta: hoy, limit: 200,
+  })
+  const { data: pendientes = [] } = usePendientesTienda(almacenId)
 
-  const isLoading = loadT || loadA
+  const regTienda  = regTiendaData?.data ?? []
+  const regAlmacen = regAlmacenData?.data ?? []
+  const isLoading  = loadT || loadA
 
-  // Filtrar solo SALIDA del día de hoy en ambos cuadernos
-  const tiendaHoy  = regTienda.filter(r  => r.tipo === 'SALIDA' && esHoy(r.creadoEn))
-  const almacenHoy = regAlmacen.filter(r => r.tipo === 'SALIDA' && esHoy(r.creadoEn))
+  // Filtrar solo SALIDA — ya vienen filtrados por fecha del server
+  const tiendaHoy  = regTienda.filter(r  => r.tipo === 'SALIDA')
+  const almacenHoy = regAlmacen.filter(r => r.tipo === 'SALIDA')
 
   // Construir mapa: varianteId → { nombre, sku, cantTienda, cantAlmacen }
   const mapaVariantes = new Map<number, FilaComparativa>()

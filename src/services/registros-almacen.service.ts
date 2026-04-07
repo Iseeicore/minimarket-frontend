@@ -1,8 +1,20 @@
 import api from '../lib/axios'
 import type { RegistroAlmacen, CreateRegistroAlmacenDto, PaginatedResult, PendienteTienda } from '../types'
 
+export interface RegistroAlmacenFilters {
+  page?: number
+  limit?: number
+  almacenId?: number
+  desde?: string
+  hasta?: string
+}
+
 export const registrosAlmacenService = {
-  // Backend devuelve PaginatedResult — extraemos solo el array de data
+  /** Paginado con filtros — devuelve { data, meta } */
+  getPaginated: (filters: RegistroAlmacenFilters = {}) =>
+    api.get<PaginatedResult<RegistroAlmacen>>('/registros-almacen', { params: filters }).then(r => r.data),
+
+  /** Legacy — trae sin paginar */
   getAll: () =>
     api.get<PaginatedResult<RegistroAlmacen>>('/registros-almacen').then(r => r.data.data),
 

@@ -42,3 +42,11 @@ export interface CreateMovimientoCajaDto {
   monto: number
   descripcion?: string
 }
+
+export type EstadoCajaResult = 'ABIERTA_HOY' | 'ABIERTA_DIA_ANTERIOR' | 'CERRADA'
+
+export interface EstadoCajaResponse {
+  estado: EstadoCajaResult
+  caja: Caja | null
+  requiereAccion: boolean
+}

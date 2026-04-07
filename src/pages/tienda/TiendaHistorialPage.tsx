@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { History, Loader2, ChevronRight, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react'
-import { useSincronizaciones } from '../../hooks/useSincronizacion'
+import { useSincronizacionesPaginado } from '../../hooks/useSincronizacion'
 import type { EstadoSincronizacion } from '../../types'
 
 // ── Helpers ────────────────────────────────────────────────────
@@ -22,15 +23,20 @@ const ESTADO_META: Record<EstadoSincronizacion, { label: string; cls: string; ic
 
 export default function TiendaHistorialPage() {
   const navigate = useNavigate()
-  const { data: sincs = [], isLoading } = useSincronizaciones()
+  const [pagina, setPagina] = useState(1)
+  const { data: sincsData, isLoading } = useSincronizacionesPaginado({ page: pagina, limit: 10 })
+  const sincs = sincsData?.data ?? []
+  const meta  = sincsData?.meta
 
-  if (isLoading) {
+  if (isLoading && sincs.length === 0) {
     return (
       <div className="flex justify-center items-center py-24">
         <Loader2 size={32} className="animate-spin text-tin" />
       </div>
     )
   }
+
+  const totalPages = meta?.totalPages ?? 1
 
   return (
     <div className="space-y-5 pt-2">
@@ -40,11 +46,11 @@ export default function TiendaHistorialPage() {
         <History size={22} className="text-tin-dark" />
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Historial</h1>
-          <p className="text-sm text-tin mt-0.5">Todas las sincronizaciones · {sincs.length} registros</p>
+          <p className="text-sm text-tin mt-0.5">Todas las sincronizaciones · {meta?.total ?? sincs.length} registros</p>
         </div>
       </div>
 
-      {/* ── Lista completa ── */}
+      {/* ── Lista paginada ── */}
       {sincs.length === 0 ? (
         <div className="bg-white rounded-2xl border border-tin/20 p-8 text-center">
           <History size={36} className="mx-auto text-tin mb-3" />
@@ -89,6 +95,29 @@ export default function TiendaHistorialPage() {
               </button>
             )
           })}
+        </div>
+      )}
+
+      {/* ── Paginación server-side ── */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between gap-3 pb-4">
+          <button
+            onClick={() => setPagina(p => Math.max(1, p - 1))}
+            disabled={pagina <= 1}
+            className="flex-1 py-3 bg-white border border-tin/30 rounded-2xl text-sm font-semibold text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all min-h-[2.75rem]"
+          >
+            ← Anterior
+          </button>
+          <span className="text-sm text-tin-dark font-medium whitespace-nowrap">
+            {pagina} / {totalPages}
+          </span>
+          <button
+            onClick={() => setPagina(p => Math.min(totalPages, p + 1))}
+            disabled={pagina >= totalPages}
+            className="flex-1 py-3 bg-white border border-tin/30 rounded-2xl text-sm font-semibold text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all min-h-[2.75rem]"
+          >
+            Siguiente →
+          </button>
         </div>
       )}
     </div>

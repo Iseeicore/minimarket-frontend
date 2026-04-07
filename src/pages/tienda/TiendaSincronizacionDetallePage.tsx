@@ -6,7 +6,8 @@ import {
   Loader2, RotateCcw, X, PanelRightOpen,
 } from 'lucide-react'
 import { useSincronizacion } from '../../hooks/useSincronizacion'
-import { useRegistrosTienda } from '../../hooks/useRegistrosTienda'
+import { useRegistrosTiendaPaginado } from '../../hooks/useRegistrosTienda'
+import { useAuthStore } from '../../store/auth.store'
 import type { EstadoReconciliacion, ReconciliacionItem } from '../../types'
 
 // ── Constantes ─────────────────────────────────────────────────
@@ -283,8 +284,19 @@ export default function TiendaSincronizacionDetallePage() {
   const navigate = useNavigate()
   const sincId   = id ? Number(id) : null
 
-  const { data: sinc, isLoading }      = useSincronizacion(sincId)
-  const { data: todosRegistros = [] }  = useRegistrosTienda()
+  const almacenId = useAuthStore(s => s.usuario?.almacenId ?? null)
+  const { data: sinc, isLoading }  = useSincronizacion(sincId)
+
+  // Registros tienda filtrados por fechas de la sincronización — para calcular omitidas
+  const sincDesde = sinc?.periodoDesde?.slice(0, 10)
+  const sincHasta = sinc?.periodoHasta?.slice(0, 10)
+  const { data: regTiendaData } = useRegistrosTiendaPaginado({
+    almacenId: almacenId ?? undefined,
+    desde: sincDesde,
+    hasta: sincHasta,
+    limit: 200,
+  })
+  const todosRegistros = regTiendaData?.data ?? []
 
   const [currentPage, setCurrentPage] = useState(1)
   const [slideOpen, setSlideOpen]     = useState(false)
@@ -304,12 +316,7 @@ export default function TiendaSincronizacionDetallePage() {
   const resueltos        = items.filter(i => i.estado === 'RESUELTO')
 
   // Devoluciones que se omitieron en esta sync (marcadas como devuelto antes del sync)
-  const sincFecha = sinc ? new Date(sinc.periodoDesde).toDateString() : null
-  const omitidas  = todosRegistros.filter(r =>
-    r.devuelto === true &&
-    sincFecha &&
-    new Date(r.creadoEn).toDateString() === sincFecha,
-  )
+  const omitidas = todosRegistros.filter(r => r.devuelto === true)
 
   if (isLoading || !sinc) {
     return (

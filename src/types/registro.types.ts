@@ -38,7 +38,13 @@ export interface RegistroTienda {
   devuelto: boolean
   creadoPor: number
   creadoEn: string
-  variante?: { id: number; nombre: string; sku: string | null }
+  variante?: {
+    id: number
+    nombre: string
+    sku: string | null
+    producto?: { id: number; nombre: string }
+    unidad?: { id: number; abreviatura: string }
+  }
   almacen?: { id: number; nombre: string }
 }
 

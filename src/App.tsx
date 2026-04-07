@@ -27,11 +27,10 @@ import SincronizacionPage from './pages/SincronizacionPage'
 import SincronizacionDetallePage from './pages/SincronizacionDetallePage'
 import TiendaHomePage from './pages/tienda/TiendaHomePage'
 import TiendaCuadernoPage from './pages/tienda/TiendaCuadernoPage'
-import TiendaSincronizacionPage from './pages/tienda/TiendaSincronizacionPage'
-import TiendaHistorialPage from './pages/tienda/TiendaHistorialPage'
-import TiendaSincronizacionDetallePage from './pages/tienda/TiendaSincronizacionDetallePage'
-import TiendaListaDiaPage from './pages/tienda/TiendaListaDiaPage'
+import TiendaVentasPage from './pages/tienda/TiendaVentasPage'
 import TiendaStockPage from './pages/tienda/TiendaStockPage'
+import TiendaImpresora from './pages/tienda/TiendaImpresora'
+import TiendaTicketsPage from './pages/tienda/TiendaTicketsPage'
 
 /** Redirige según rol: JEFE_VENTA → /tienda, resto → /dashboard */
 function SmartRedirect() {
@@ -100,11 +99,10 @@ export default function App() {
             <Route element={<TiendaLayout />}>
               <Route path="/tienda" element={<TiendaHomePage />} />
               <Route path="/tienda/cuaderno" element={<TiendaCuadernoPage />} />
-              <Route path="/tienda/lista-dia" element={<TiendaListaDiaPage />} />
               <Route path="/tienda/stock" element={<TiendaStockPage />} />
-              <Route path="/tienda/sincronizacion" element={<TiendaSincronizacionPage />} />
-              <Route path="/tienda/sincronizacion/historial" element={<TiendaHistorialPage />} />
-              <Route path="/tienda/sincronizacion/:id" element={<TiendaSincronizacionDetallePage />} />
+              <Route path="/tienda/ventas" element={<TiendaVentasPage />} />
+              <Route path="/tienda/tickets" element={<TiendaTicketsPage />} />
+              <Route path="/tienda/impresora" element={<TiendaImpresora />} />
             </Route>
           </Route>
 

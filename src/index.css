@@ -57,3 +57,50 @@ body {
 /* Ícono info → cyan */
 .sileo-toast[data-type="info"] svg,
 .sileo-info svg { color: #67e8f9 !important; }
+
+/* ── Print — fallback 58mm para impresion directa desde browser ────────────── */
+@media print {
+  @page {
+    size: 58mm auto;
+    margin: 0;
+  }
+
+  /* Ocultar TODO por defecto */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Mostrar SOLO el ticket y sus hijos */
+  #ticket-imprimir,
+  #ticket-imprimir * {
+    visibility: visible;
+  }
+
+  #ticket-imprimir {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 58mm;
+    padding: 2mm;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    line-height: 1.3;
+    color: #000;
+    background: #fff;
+  }
+
+  /* Forzar texto negro y fondo blanco */
+  #ticket-imprimir * {
+    color: #000 !important;
+    background: transparent !important;
+  }
+
+  /* Badges con borde en vez de color de fondo */
+  #ticket-imprimir span[class*="rounded-full"] {
+    border: 1px solid #000 !important;
+    padding: 1px 4px !important;
+  }
+}

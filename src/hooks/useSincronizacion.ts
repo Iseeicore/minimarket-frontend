@@ -1,9 +1,24 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { qk } from '../lib/query-keys'
 import { sincronizacionService } from '../services/sincronizacion.service'
+import type { SincronizacionFilters } from '../services/sincronizacion.service'
 import type { CreateSincronizacionDto, ResolverItemDto } from '../types'
 import { sileo } from 'sileo'
 
+/**
+ * Sincronizaciones paginadas con filtros servidor.
+ * Devuelve { data, meta } con paginación real.
+ */
+export function useSincronizacionesPaginado(filters: SincronizacionFilters) {
+  return useQuery({
+    queryKey: [...qk.sincronizacion.all, 'paginated', filters] as const,
+    queryFn: () => sincronizacionService.getPaginated(filters),
+    staleTime: 1000 * 60,
+    placeholderData: keepPreviousData,
+  })
+}
+
+/** Legacy — trae todas sin paginar */
 export function useSincronizaciones() {
   return useQuery({
     queryKey: qk.sincronizacion.all,

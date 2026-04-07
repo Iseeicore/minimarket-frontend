@@ -1,16 +1,18 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/auth.store'
-import { Home, BookOpen, GitCompare, LogOut, Store, Package } from 'lucide-react'
+import { usePrinterStore } from '../../store/printer.store'
+import { Home, BookOpen, ShoppingCart, LogOut, Store, Package, Bluetooth, BluetoothOff, Loader2 } from 'lucide-react'
 
 const NAV_TABS = [
-  { to: '/tienda',                label: 'Inicio',      icon: Home,      end: true  },
-  { to: '/tienda/stock',          label: 'Stock',       icon: Package,   end: false },
-  { to: '/tienda/cuaderno',       label: 'Cuaderno',    icon: BookOpen,  end: false },
-  { to: '/tienda/sincronizacion', label: 'Sincronizar', icon: GitCompare, end: false },
+  { to: '/tienda',           label: 'Inicio',    icon: Home,         end: true  },
+  { to: '/tienda/stock',     label: 'Stock',     icon: Package,      end: false },
+  { to: '/tienda/cuaderno',  label: 'Cuaderno',  icon: BookOpen,     end: false },
+  { to: '/tienda/ventas',    label: 'Ordenes',   icon: ShoppingCart,  end: false },
 ]
 
 export default function TiendaLayout() {
   const { usuario, logout } = useAuthStore()
+  const printer = usePrinterStore()
   const navigate = useNavigate()
 
   function handleLogout() {
@@ -18,12 +20,21 @@ export default function TiendaLayout() {
     navigate('/login')
   }
 
+  function handlePrinter() {
+    navigate('/tienda/impresora')
+  }
+
   const nombre = usuario?.nombre?.split(' ')[0] ?? ''
+
+  // -- Bluetooth icon state --
+  const btConnected  = printer.status === 'connected'
+  const btConnecting = printer.status === 'connecting'
+  const BtIcon       = btConnected ? Bluetooth : btConnecting ? Loader2 : BluetoothOff
 
   return (
     <div className="flex flex-col min-h-screen bg-tin-pale">
 
-      {/* ── Cabecera ── */}
+      {/* -- Cabecera -- */}
       <header className="bg-gray-900 px-4 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
@@ -32,7 +43,30 @@ export default function TiendaLayout() {
           <span className="font-bold text-white text-base">MiniMarket</span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5">
+          {/* Boton Bluetooth */}
+          {printer.isSupported && (
+            <button
+              onClick={handlePrinter}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-colors min-h-[2.75rem] ${
+                btConnected
+                  ? 'text-primary bg-primary/15 hover:bg-primary/25'
+                  : btConnecting
+                    ? 'text-amber-400 cursor-wait'
+                    : 'text-gray-400 hover:text-white hover:bg-white/10'
+              }`}
+              title={btConnected ? `Conectada: ${printer.deviceName}` : 'Configurar impresora'}
+            >
+              <BtIcon size={16} className={btConnecting ? 'animate-spin' : ''} />
+              <span className="hidden sm:inline text-xs font-medium">
+                {btConnected ? printer.deviceName : btConnecting ? 'Conectando...' : 'Impresora'}
+              </span>
+              {btConnected && (
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              )}
+            </button>
+          )}
+
           {nombre && (
             <p className="text-sm font-medium text-gray-300 hidden sm:block">{usuario?.nombre}</p>
           )}
@@ -46,14 +80,14 @@ export default function TiendaLayout() {
         </div>
       </header>
 
-      {/* ── Contenido ── */}
+      {/* -- Contenido -- */}
       <main className="flex-1 overflow-auto pb-24">
         <div className="p-4 sm:p-6 max-w-2xl mx-auto">
           <Outlet />
         </div>
       </main>
 
-      {/* ── Nav inferior (bottom tabs) ── */}
+      {/* -- Nav inferior (bottom tabs) -- */}
       <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-tin/20 grid grid-cols-4 z-40 safe-area-inset-bottom">
         {NAV_TABS.map(({ to, label, icon: Icon, end }) => (
           <NavLink

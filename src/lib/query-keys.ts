@@ -39,6 +39,7 @@ export const qk = {
   caja: {
     all: ['cajas'] as const,
     activa: (almacenId: number) => ['caja', 'activa', almacenId] as const,
+    estado: (almacenId: number) => ['caja', 'estado', almacenId] as const,
     detail: (id: number) => ['caja', id] as const,
     movimientos: (id: number) => ['caja', id, 'movimientos'] as const,
   },
@@ -95,5 +96,12 @@ export const qk = {
     byAlmacen:    (almacenId: number) => ['sincronizacion', almacenId] as const,
     detail:       (id: number)        => ['sincronizacion', 'detail', id] as const,
     items:        (id: number)        => ['sincronizacion', id, 'items'] as const,
+  },
+  // Órdenes de salida (reemplaza sincronización para jefe_tienda)
+  ordenesSalida: {
+    all:        ['ordenes-salida'] as const,
+    byAlmacen:  (almacenId: number) => ['ordenes-salida', almacenId] as const,
+    detail:     (id: number)        => ['ordenes-salida', 'detail', id] as const,
+    stockDual:  (almacenId: number) => ['ordenes-salida', 'stock-dual', almacenId] as const,
   },
 } as const

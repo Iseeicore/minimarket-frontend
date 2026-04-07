@@ -3,7 +3,7 @@ import {
   GitCompare, CheckCircle2, AlertTriangle,
   Loader2, ChevronRight, History, RefreshCw,
 } from 'lucide-react'
-import { useSincronizaciones, useEjecutarSincronizacion } from '../../hooks/useSincronizacion'
+import { useSincronizacionesPaginado, useEjecutarSincronizacion } from '../../hooks/useSincronizacion'
 import { useAuthStore } from '../../store/auth.store'
 import type { EstadoSincronizacion } from '../../types'
 
@@ -49,11 +49,11 @@ export default function TiendaSincronizacionPage() {
   const usuario    = useAuthStore(s => s.usuario)
   const almacenId  = usuario?.almacenId ?? null
 
-  const { data: sincs = [], isLoading } = useSincronizaciones()
+  const { data: sincsData, isLoading } = useSincronizacionesPaginado({ limit: 3 })
   const ejecutar = useEjecutarSincronizacion()
 
-  const recientes    = sincs.slice(0, 3)
-  const ultimaSync   = sincs[0] ?? null
+  const recientes    = sincsData?.data ?? []
+  const ultimaSync   = recientes[0] ?? null
   const tieneProblema = ultimaSync?.estado === 'CON_DIFERENCIAS'
   const estaBien      = ultimaSync?.estado === 'COMPLETADA'
 

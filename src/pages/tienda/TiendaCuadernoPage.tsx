@@ -1,23 +1,14 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import {
-  Plus, Loader2, ArrowUpRight, ArrowDownLeft,
-  RotateCcw, BookOpen, ChevronLeft, Library,
+  Loader2, BookOpen, ChevronLeft, Library,
+  X, SlidersHorizontal,
 } from 'lucide-react'
-import { PanelPendientes } from '../../components/shared/PanelPendientes'
-import {
-  useRegistrosTienda,
-  useCreateRegistroTienda,
-  useMarcarDevueltoTienda,
-} from '../../hooks/useRegistrosTienda'
-import { usePendientesTienda } from '../../hooks/useRegistrosAlmacen'
+import { useRegistrosTiendaPaginado, useRegistrosTiendaConteo, useResumenDia } from '../../hooks/useRegistrosTienda'
 import { useAuthStore } from '../../store/auth.store'
-import { variantesService } from '../../services/productos.service'
-import { qk } from '../../lib/query-keys'
-import type { PendienteTienda, TipoMovRegistro } from '../../types'
+import type { RegistroTienda } from '../../types'
 
 
-// ── Helpers ────────────────────────────────────────────────────
+// -- Helpers --
 
 /** Fecha local en formato yyyy-mm-dd — evita el desfase UTC en servidores. */
 function getLocalISO(date: Date = new Date()): string {
@@ -52,18 +43,6 @@ function lastDays(n: number): string[] {
   })
 }
 
-const TIPO_META: Record<TipoMovRegistro, {
-  label: string
-  Icon:  typeof ArrowUpRight
-  badge: string
-  color: string
-}> = {
-  SALIDA:        { label: 'Salida',        Icon: ArrowUpRight,  badge: 'bg-red-100 text-red-700 border border-red-200',          color: 'text-red-500'      },
-  ENTRADA:       { label: 'Entrada',       Icon: ArrowDownLeft, badge: 'bg-green-100 text-green-700 border border-green-200',    color: 'text-green-600'    },
-  TRANSFERENCIA: { label: 'Transf.',       Icon: RotateCcw,     badge: 'bg-blue-100 text-blue-700 border border-blue-200',      color: 'text-blue-500'     },
-  DEVOLUCION:    { label: 'Devolución',    Icon: ArrowDownLeft, badge: 'bg-amber-100 text-amber-700 border border-amber-200',   color: 'text-amber-600'    },
-}
-
 /** Paleta de tapas de cuaderno — cada fecha recibe un color distinto */
 const TAPAS = [
   '#7f1d1d', // rojo oscuro
@@ -87,155 +66,9 @@ function tapaPara(iso: string) {
   return TAPAS[day % TAPAS.length]
 }
 
-// ── Modal: formulario de nuevo registro ───────────────────────
-interface ModalNuevoProps {
-  almacenId: number
-  onClose:   () => void
-}
-function ModalNuevo({ almacenId, onClose }: ModalNuevoProps) {
-  const [search, setSearch]                   = useState('')
-  const [varianteId, setVarianteId]           = useState('')
-  const [varianteNombre, setVarianteNombre]   = useState('')
-  const [cantidad, setCantidad]               = useState('')
-  const [tipo, setTipo]                       = useState<TipoMovRegistro>('SALIDA')
+// -- Sub-componentes reutilizables --
 
-  const { data: variantes = [], isFetching } = useQuery({
-    queryKey: qk.variantes.search(search),
-    queryFn:  () => variantesService.getAll(search || undefined),
-    staleTime: 1000 * 30,
-    enabled:   search.length > 0,
-  })
-
-  const crear       = useCreateRegistroTienda()
-  const cantidadNum = parseInt(cantidad, 10)
-  const canSubmit   = !!varianteId && cantidadNum > 0 && !crear.isPending
-
-  function seleccionar(id: number, nombre: string, sku?: string | null) {
-    setVarianteId(String(id))
-    setVarianteNombre(nombre + (sku ? ` (${sku})` : ''))
-    setSearch('')
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!canSubmit) return
-    crear.mutate(
-      { almacenId, varianteId: Number(varianteId), cantidad: cantidadNum, tipo },
-      { onSuccess: onClose },
-    )
-  }
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60"
-      onClick={onClose}
-    >
-      <div
-        className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl overflow-hidden shadow-2xl"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="bg-amber-700 px-5 pt-5 pb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BookOpen size={18} className="text-amber-200" />
-            <h2 className="text-base font-bold text-white">Anotar en el cuaderno</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors text-lg leading-none"
-          >
-            ×
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-5 space-y-5">
-          {/* Producto */}
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">¿Qué producto?</label>
-            {varianteId ? (
-              <div className="flex items-center justify-between gap-2 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200">
-                <span className="font-semibold text-amber-900 text-sm">{varianteNombre}</span>
-                <button type="button" onClick={() => { setVarianteId(''); setVarianteNombre('') }}
-                  className="text-xs text-amber-700 hover:text-amber-900 underline">
-                  Cambiar
-                </button>
-              </div>
-            ) : (
-              <div>
-                <input
-                  type="text" inputMode="text" autoFocus
-                  placeholder="Buscar producto por nombre..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="w-full rounded-xl border border-tin/30 px-4 py-3.5 text-base focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                />
-                {search.length > 0 && (
-                  <div className="mt-1 border border-tin/20 rounded-xl bg-white max-h-48 overflow-y-auto shadow-md">
-                    {isFetching && <div className="flex justify-center py-3"><Loader2 size={16} className="animate-spin text-tin" /></div>}
-                    {!isFetching && variantes.length === 0 && <p className="px-4 py-3 text-sm text-tin">Sin resultados</p>}
-                    {variantes.map(v => (
-                      <button key={v.id} type="button" onClick={() => seleccionar(v.id, v.nombre, v.sku)}
-                        className="w-full text-left px-4 py-3 text-sm border-b border-tin/10 last:border-0 hover:bg-amber-50 transition-colors">
-                        <span className="font-semibold text-slate-800">{v.nombre}</span>
-                        {v.sku && <span className="ml-2 text-xs text-tin">{v.sku}</span>}
-                        {v.producto && <span className="ml-1 text-xs text-gray-400">· {v.producto.nombre}</span>}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Cantidad */}
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">¿Cuántos?</label>
-            <input
-              type="text" inputMode="numeric" placeholder="0"
-              value={cantidad}
-              onChange={e => { if (/^\d*$/.test(e.target.value)) setCantidad(e.target.value) }}
-              className="w-full rounded-xl border border-tin/30 px-4 py-3.5 text-3xl font-bold text-center text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-            />
-          </div>
-
-          {/* Tipo */}
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">¿Qué pasó?</label>
-            <div className="grid grid-cols-2 gap-2">
-              {(['SALIDA', 'ENTRADA'] as TipoMovRegistro[]).map(t => {
-                const meta = TIPO_META[t]
-                return (
-                  <button key={t} type="button" onClick={() => setTipo(t)}
-                    className={`flex flex-col items-center justify-center py-4 rounded-xl border-2 font-bold text-sm transition-all duration-150 ${
-                      tipo === t
-                        ? t === 'SALIDA'
-                          ? 'border-red-400 bg-red-50 text-red-700'
-                          : 'border-green-400 bg-green-50 text-green-700'
-                        : 'border-tin/20 bg-white text-tin-dark hover:border-tin/50'
-                    }`}>
-                    <meta.Icon size={24} className="mb-1" />
-                    {meta.label}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          <button
-            type="submit" disabled={!canSubmit}
-            className="w-full py-4 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold text-base transition-all duration-150 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {crear.isPending
-              ? <Loader2 size={20} className="animate-spin" />
-              : <><BookOpen size={18} /> Anotar en el cuaderno</>
-            }
-          </button>
-        </form>
-      </div>
-    </div>
-  )
-}
-
-// ── Espirales decorativas ──────────────────────────────────────
+/** Espirales decorativas en la tapa del cuaderno */
 function Espirales({ color = 'bg-black/20' }: { color?: string }) {
   return (
     <div className={`flex items-center gap-[5px] px-3 py-2 ${color}`}>
@@ -246,26 +79,27 @@ function Espirales({ color = 'bg-black/20' }: { color?: string }) {
   )
 }
 
-// ── Card de cuaderno (vista estantería) ────────────────────────
+
+// -- Vista: card de cuaderno (estantería) --
+
 interface NotebookCardProps {
-  iso:        string
-  isToday:    boolean
-  registros:  number   // cantidad de registros ese día
-  onClick:    () => void
+  iso:       string
+  isToday:   boolean
+  registros: number
+  onClick:   () => void
 }
 function NotebookCard({ iso, isToday, registros, onClick }: NotebookCardProps) {
-  const d      = new Date(iso + 'T00:00:00')
-  const day    = d.getDate()
-  const month  = d.toLocaleDateString('es-PE', { month: 'short' })
+  const d       = new Date(iso + 'T00:00:00')
+  const day     = d.getDate()
+  const month   = d.toLocaleDateString('es-PE', { month: 'short' })
   const weekday = d.toLocaleDateString('es-PE', { weekday: 'short' }).toUpperCase()
-  const tapa   = tapaPara(iso)
+  const tapa    = tapaPara(iso)
 
   return (
     <button
       onClick={onClick}
       className="flex flex-col items-center gap-1.5 group active:scale-95 transition-transform duration-150"
     >
-      {/* Cuerpo del cuaderno */}
       <div
         className="w-full rounded-xl overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow duration-200 relative"
         style={{ backgroundColor: tapa }}
@@ -277,7 +111,6 @@ function NotebookCard({ iso, isToday, registros, onClick }: NotebookCardProps) {
           ))}
         </div>
 
-        {/* Contenido de la tapa */}
         <div className="px-2 pt-2 pb-3 text-center">
           <p className="text-white/60 text-[10px] font-bold tracking-widest">{weekday}</p>
           <p className="text-white font-black leading-none mt-0.5" style={{ fontSize: 'clamp(1.75rem, 8vw, 2.5rem)' }}>
@@ -286,7 +119,6 @@ function NotebookCard({ iso, isToday, registros, onClick }: NotebookCardProps) {
           <p className="text-white/70 text-xs font-medium capitalize">{month}</p>
         </div>
 
-        {/* Badge "HOY" */}
         {isToday && (
           <div className="absolute top-2 right-2 bg-primary text-slate-900 text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase">
             Hoy
@@ -294,7 +126,6 @@ function NotebookCard({ iso, isToday, registros, onClick }: NotebookCardProps) {
         )}
       </div>
 
-      {/* Cantidad de registros */}
       <span className="text-xs font-semibold text-tin-dark">
         {registros === 0 ? 'Sin registros' : `${registros} registros`}
       </span>
@@ -302,18 +133,27 @@ function NotebookCard({ iso, isToday, registros, onClick }: NotebookCardProps) {
   )
 }
 
-// ── Vista estantería ───────────────────────────────────────────
+
+// -- Vista: estantería --
+
 interface ShelfViewProps {
-  dias:          string[]
+  dias:            string[]
   registrosPorDia: Record<string, number>
-  onSelect:      (iso: string) => void
-  onBack:        () => void
+  onSelect:        (iso: string) => void
+  onBack:          () => void
 }
+const DAYS_PER_PAGE = 8
+
 function ShelfView({ dias, registrosPorDia, onSelect, onBack }: ShelfViewProps) {
+  const [pagina, setPagina] = useState(1)
+
+  const totalPages = Math.max(1, Math.ceil(dias.length / DAYS_PER_PAGE))
+  const safePage   = Math.min(pagina, totalPages)
+  const pageDias   = dias.slice((safePage - 1) * DAYS_PER_PAGE, safePage * DAYS_PER_PAGE)
+
   return (
-    <div className="pt-2 pb-8">
-      {/* Header estantería */}
-      <div className="flex items-center gap-3 mb-6">
+    <div className="pt-2 pb-4 space-y-4">
+      <div className="flex items-center gap-3">
         <button
           onClick={onBack}
           className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-tin/20 shadow-sm hover:bg-tin-pale active:scale-95 transition-all duration-150"
@@ -326,9 +166,8 @@ function ShelfView({ dias, registrosPorDia, onSelect, onBack }: ShelfViewProps) 
         </div>
       </div>
 
-      {/* Grilla de cuadernos */}
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
-        {dias.map(iso => (
+        {pageDias.map(iso => (
           <NotebookCard
             key={iso}
             iso={iso}
@@ -338,32 +177,219 @@ function ShelfView({ dias, registrosPorDia, onSelect, onBack }: ShelfViewProps) 
           />
         ))}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between gap-3">
+          <button
+            onClick={() => setPagina(p => Math.max(1, p - 1))}
+            disabled={safePage === 1}
+            className="flex-1 py-3 bg-white border border-tin/30 rounded-2xl text-sm font-semibold text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all min-h-[2.75rem]"
+          >
+            ← Anterior
+          </button>
+          <span className="text-sm text-tin-dark font-medium whitespace-nowrap">
+            {safePage} / {totalPages}
+          </span>
+          <button
+            onClick={() => setPagina(p => Math.min(totalPages, p + 1))}
+            disabled={safePage === totalPages}
+            className="flex-1 py-3 bg-white border border-tin/30 rounded-2xl text-sm font-semibold text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all min-h-[2.75rem]"
+          >
+            Siguiente →
+          </button>
+        </div>
+      )}
     </div>
   )
 }
 
-// ── Vista cuaderno ─────────────────────────────────────────────
-interface NotebookViewProps {
-  selectedDate:  string
-  registros:     any[]
+
+// -- Panel de detalle del día (slide right-to-left) --
+// Muestra resumen consolidado: productos agrupados con cantidad total
+
+interface SlideDetalleDiaProps {
+  open:          boolean
+  onClose:       () => void
   almacenId:     number | null
-  pendientes:    PendienteTienda[]
-  onOpenShelf:   () => void
-  onOpenModal:   () => void
-  onDevolver:    (id: number) => void
-  devolviendo:   boolean
+  selectedDate:  string
 }
-function NotebookView({
-  selectedDate, registros, almacenId, pendientes,
-  onOpenShelf, onOpenModal, onDevolver, devolviendo,
-}: NotebookViewProps) {
+function SlideDetalleDia({ open, onClose, almacenId, selectedDate }: SlideDetalleDiaProps) {
+  const [tipoFiltro, setTipoFiltro] = useState<'SALIDA' | 'TRANSFERENCIA'>('SALIDA')
+  const [pagina, setPagina] = useState(1)
+
+  const { data: resumenData, isLoading } = useResumenDia({
+    almacenId,
+    fecha: selectedDate,
+    tipo: tipoFiltro,
+    page: pagina,
+    limit: 10,
+  })
+
+  const items      = resumenData?.data ?? []
+  const meta       = resumenData?.meta
+  const totalPages = meta?.totalPages ?? 1
+
+  // Reset pagina al cambiar tipo
+  function handleTipo(tipo: 'SALIDA' | 'TRANSFERENCIA') {
+    setTipoFiltro(tipo)
+    setPagina(1)
+  }
+
+  return (
+    <>
+      {/* Overlay */}
+      <div
+        onClick={onClose}
+        className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 ${
+          open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+      />
+
+      {/* Panel lateral derecho */}
+      <div
+        className={`fixed top-0 right-0 bottom-0 z-50 w-[min(22rem,92vw)] bg-white shadow-2xl
+          flex flex-col transform transition-transform duration-300
+          ${open ? 'translate-x-0' : 'translate-x-full'}`}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-tin/20 shrink-0">
+          <div className="flex items-center gap-2">
+            <BookOpen size={18} className="text-amber-700" />
+            <h2 className="text-base font-bold text-slate-900">Resumen del Día</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-tin hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Toggle Ventas / Transferencias */}
+        <div className="px-4 pt-4 shrink-0">
+          <div className="flex gap-2 bg-tin-pale rounded-xl p-1">
+            <button
+              onClick={() => handleTipo('SALIDA')}
+              className={`flex-1 min-h-[2.25rem] rounded-lg font-bold text-xs transition-all duration-200 active:scale-95 ${
+                tipoFiltro === 'SALIDA'
+                  ? 'bg-green-500 text-white shadow-sm'
+                  : 'text-tin-dark hover:text-slate-700'
+              }`}
+            >
+              Ventas
+            </button>
+            <button
+              onClick={() => handleTipo('TRANSFERENCIA')}
+              className={`flex-1 min-h-[2.25rem] rounded-lg font-bold text-xs transition-all duration-200 active:scale-95 ${
+                tipoFiltro === 'TRANSFERENCIA'
+                  ? 'bg-blue-500 text-white shadow-sm'
+                  : 'text-tin-dark hover:text-slate-700'
+              }`}
+            >
+              Transferencias
+            </button>
+          </div>
+
+          {meta && (
+            <p className="text-xs text-tin mt-2 text-center">
+              {meta.total} {meta.total === 1 ? 'producto' : 'productos'}
+            </p>
+          )}
+        </div>
+
+        {/* Lista de productos consolidados */}
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          {isLoading && items.length === 0 ? (
+            <div className="flex justify-center py-12">
+              <Loader2 size={24} className="animate-spin text-tin" />
+            </div>
+          ) : items.length === 0 ? (
+            <p className="text-sm text-tin italic text-center py-8">
+              Sin {tipoFiltro === 'SALIDA' ? 'ventas' : 'transferencias'} para este día.
+            </p>
+          ) : (
+            <div className="space-y-1.5">
+              {items.map((item, idx) => {
+                const nombre = item.variante?.producto?.nombre
+                  ? `${item.variante.producto.nombre} - ${item.variante.nombre}`
+                  : item.variante?.nombre ?? `#${item.varianteId}`
+                const unidad = item.variante?.unidad?.abreviatura ?? ''
+                const num = ((pagina - 1) * 10) + idx + 1
+
+                return (
+                  <div key={item.varianteId} className="flex items-baseline gap-2 px-2 py-1.5 rounded-lg hover:bg-tin-pale/50 transition-colors">
+                    <span className="text-xs text-tin w-5 text-right shrink-0">{num}</span>
+                    <span className="text-sm text-slate-800 flex-1 min-w-0 truncate">{nombre}</span>
+                    <span className="flex-1 border-b border-dotted border-slate-300 mx-1 shrink" aria-hidden />
+                    <span className="text-sm font-bold text-slate-900 tabular-nums shrink-0">
+                      {item.totalCantidad}
+                    </span>
+                    {unidad && (
+                      <span className="text-xs text-tin shrink-0 w-6">{unidad}</span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Paginación */}
+        {totalPages > 1 && (
+          <div className="shrink-0 flex items-center justify-between gap-2 px-4 py-3 border-t border-tin/20">
+            <button
+              onClick={() => setPagina(p => Math.max(1, p - 1))}
+              disabled={pagina <= 1}
+              className="min-h-[2rem] px-3 text-xs font-semibold text-tin-dark bg-tin-pale rounded-lg active:scale-95 transition-all disabled:opacity-40"
+            >
+              Anterior
+            </button>
+            <span className="text-xs text-tin-dark">{pagina} / {totalPages}</span>
+            <button
+              onClick={() => setPagina(p => Math.min(totalPages, p + 1))}
+              disabled={pagina >= totalPages}
+              className="min-h-[2rem] px-3 text-xs font-semibold text-tin-dark bg-tin-pale rounded-lg active:scale-95 transition-all disabled:opacity-40"
+            >
+              Siguiente
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  )
+}
+
+
+// -- Vista: cuaderno (modo lectura) --
+
+interface NotebookViewProps {
+  selectedDate: string
+  registros:    RegistroTienda[]
+  totalRegistros: number
+  page:         number
+  totalPages:   number
+  onPageChange: (page: number) => void
+  onOpenShelf:  () => void
+  onOpenPanel:  () => void
+}
+const ITEMS_PER_PAGE = 10
+
+function NotebookView({ selectedDate, registros, totalRegistros, page, totalPages, onPageChange, onOpenShelf, onOpenPanel }: NotebookViewProps) {
   const isToday      = selectedDate === TODAY_ISO
   const fechaDisplay = formatFechaLarga(selectedDate)
 
+  const pageRegistros = registros
+  const startIdx      = (page - 1) * ITEMS_PER_PAGE
+
+  // Conteos de la página actual (la info total viene del meta)
+  const totalVentas         = registros.filter(r => r.tipo === 'SALIDA').reduce((s, r) => s + r.cantidad, 0)
+  const totalTransferencias = registros.filter(r => r.tipo === 'TRANSFERENCIA').reduce((s, r) => s + r.cantidad, 0)
+
+  // -- JSX --
   return (
     <div className="space-y-3 pt-2 pb-4">
 
-      {/* ── Botón "Ver otro día" — prominente, antes del cuaderno ── */}
+      {/* Botón "Ver otro día" — prominente, da contexto inmediato de navegación */}
       <button
         onClick={onOpenShelf}
         className="w-full flex items-center gap-3 px-5 py-4 bg-white border-2 border-amber-300 rounded-2xl shadow-sm hover:bg-amber-50 hover:border-amber-400 active:scale-[0.98] transition-all duration-150"
@@ -377,14 +403,12 @@ function NotebookView({
         </div>
       </button>
 
-      {/* ── Pendientes del almacén — solo para el día de hoy ── */}
-      {isToday && <PanelPendientes items={pendientes} />}
-
+      {/* Cuaderno */}
       <div
         className="rounded-2xl overflow-hidden shadow-xl"
         style={{ boxShadow: '4px 6px 20px rgba(0,0,0,0.2), -2px 2px 8px rgba(0,0,0,0.1)' }}
       >
-        {/* ── TAPA ── */}
+        {/* TAPA */}
         <div className="bg-amber-700">
           <Espirales />
           <div className="px-5 py-5 pb-6">
@@ -393,20 +417,30 @@ function NotebookView({
                 <h1 className="text-white font-bold text-2xl leading-tight">Mi Cuaderno</h1>
                 <p className="text-amber-200 text-sm mt-1 capitalize">{fechaDisplay}</p>
               </div>
-              <div className="text-right shrink-0">
-                {isToday && (
-                  <span className="inline-block bg-primary text-slate-900 text-xs font-black px-2.5 py-1 rounded-full mb-1">
-                    HOY
-                  </span>
-                )}
-                <p className="text-white font-bold text-2xl">{registros.length}</p>
-                <p className="text-amber-300 text-xs">registros</p>
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Botón Filtrar — abre el slide panel */}
+                <button
+                  onClick={onOpenPanel}
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-primary text-slate-900 text-xs font-black shadow-lg hover:bg-primary-dark active:scale-95 transition-all"
+                >
+                  <SlidersHorizontal size={13} />
+                  Filtrar
+                </button>
+                <div className="text-right">
+                  {isToday && (
+                    <span className="inline-block bg-primary text-slate-900 text-xs font-black px-2.5 py-1 rounded-full mb-1">
+                      HOY
+                    </span>
+                  )}
+                  <p className="text-white font-bold text-2xl">{totalRegistros}</p>
+                  <p className="text-amber-300 text-xs">registros</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ── HOJA CON LÍNEAS ROJAS ── */}
+        {/* HOJA CON LÍNEAS */}
         <div className="relative" style={{ backgroundColor: '#fef9ec' }}>
 
           {/* Línea roja de margen (vertical) */}
@@ -426,8 +460,8 @@ function NotebookView({
             <span className="w-12 text-right text-[10px] font-bold text-red-400 uppercase tracking-widest">Hora</span>
           </div>
 
-          {/* Sin registros */}
-          {registros.length === 0 && (
+          {/* Estado vacío — rellena la hoja con líneas para mantener la estética */}
+          {totalRegistros === 0 && (
             <>
               {Array.from({ length: 8 }).map((_, i) => (
                 <div
@@ -445,128 +479,144 @@ function NotebookView({
             </>
           )}
 
-          {/* Filas de registros */}
-          {registros.map((r, idx) => {
-            const meta = TIPO_META[r.tipo]
-            const { Icon } = meta
+          {/* Filas de registros — paginadas */}
+          {pageRegistros.map((r, idx) => {
+            // Badge visual diferenciado por tipo para lectura rápida
+            const esVenta         = r.tipo === 'SALIDA'
+            const esTransferencia = r.tipo === 'TRANSFERENCIA'
+            const badgeClass      = esVenta
+              ? 'bg-green-100 text-green-700 border border-green-200'
+              : esTransferencia
+                ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                : 'bg-slate-100 text-slate-600 border border-slate-200'
+            const badgeLabel      = esVenta ? 'VENTA' : esTransferencia ? 'TRANSF.' : r.tipo
+
             return (
               <div
                 key={r.id}
                 className="flex items-center gap-2 hover:bg-amber-50/60 transition-colors duration-100"
                 style={{ minHeight: '3rem', borderBottom: '1px solid #fecaca', paddingLeft: '0.5rem', paddingRight: '0.75rem' }}
               >
-                {/* Número de línea (en el margen) */}
+                {/* Número de línea en el margen */}
                 <span className="text-[11px] font-bold text-red-300 shrink-0 text-right" style={{ width: '1.75rem' }}>
-                  {idx + 1}
+                  {startIdx + idx + 1}
                 </span>
                 <div style={{ width: '0.75rem', flexShrink: 0 }} />
 
-                {/* Ícono tipo */}
-                <Icon size={14} className={`shrink-0 ${meta.color}`} />
-
                 {/* Nombre del producto */}
                 <span className="flex-1 text-sm font-semibold text-slate-800 truncate min-w-0">
-                  {r.variante?.nombre ?? `Variante #${r.varianteId}`}
-                  {r.variante?.sku && (
-                    <span className="ml-1.5 text-xs font-normal text-slate-400">{r.variante.sku}</span>
-                  )}
+                  {r.variante?.producto?.nombre ? `${r.variante.producto.nombre} - ${r.variante.nombre}` : r.variante?.nombre ?? `#${r.varianteId}`}
                 </span>
 
-                {/* Cantidad */}
+                {/* Cantidad — centrada y prominente */}
                 <span className="w-10 text-center text-base font-bold text-slate-900 tabular-nums shrink-0">
                   {r.cantidad}
                 </span>
 
                 {/* Badge tipo — solo en sm+ */}
-                <span className={`hidden sm:inline-flex w-16 justify-center text-[11px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${meta.badge}`}>
-                  {meta.label}
+                <span className={`hidden sm:inline-flex w-16 justify-center text-[11px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${badgeClass}`}>
+                  {badgeLabel}
                 </span>
 
                 {/* Hora */}
                 <span className="w-12 text-right text-xs text-slate-400 tabular-nums shrink-0">
                   {formatHora(r.creadoEn)}
                 </span>
-
-                {/* Devolver */}
-                {!r.devuelto && isToday && (
-                  <button
-                    onClick={() => onDevolver(r.id)}
-                    disabled={devolviendo}
-                    title="Marcar como devuelto"
-                    className="ml-1 p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors shrink-0"
-                  >
-                    <RotateCcw size={13} />
-                  </button>
-                )}
               </div>
             )
           })}
 
-          {/* Líneas vacías de relleno */}
-          {Array.from({ length: Math.max(4, 8 - registros.length) }).map((_, i) => (
+          {/* Líneas vacías de relleno — mantiene la profundidad visual del cuaderno */}
+          {Array.from({ length: Math.max(2, 8 - pageRegistros.length) }).map((_, i) => (
             <div
               key={`empty-${i}`}
               style={{ minHeight: '3rem', borderBottom: '1px solid #fecaca' }}
             />
           ))}
 
-          {/* Pie del cuaderno */}
-          <div className="py-3 text-center" style={{ borderTop: '2px solid #fca5a5' }}>
-            <p className="text-xs text-slate-400 italic">
-              {registros.length === 0
-                ? 'Página en blanco'
-                : `${registros.length} ${registros.length === 1 ? 'anotación' : 'anotaciones'}`}
-            </p>
+          {/* Pie del cuaderno — resumen de items por tipo */}
+          <div className="py-3 px-5" style={{ borderTop: '2px solid #fca5a5' }}>
+            {totalRegistros === 0 ? (
+              <p className="text-xs text-slate-400 italic text-center">Página en blanco</p>
+            ) : (
+              <p className="text-xs text-slate-500 text-center">
+                <span className="font-bold text-green-700">Ventas: {totalVentas} items</span>
+                <span className="mx-3 text-slate-300">|</span>
+                <span className="font-bold text-blue-700">Transferencias: {totalTransferencias} items</span>
+              </p>
+            )}
           </div>
         </div>
       </div>
 
-      {/* FAB — solo para el día de hoy */}
-      {almacenId && isToday && (
-        <button
-          onClick={onOpenModal}
-          className="fixed bottom-24 right-4 sm:right-6 w-16 h-16 rounded-full bg-amber-700 hover:bg-amber-800 shadow-lg shadow-amber-900/30 flex items-center justify-center transition-all duration-150 active:scale-95 z-30"
-        >
-          <Plus size={28} className="text-white" strokeWidth={2.5} />
-        </button>
+      {/* Paginación del cuaderno — servidor */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between gap-3">
+          <button
+            onClick={() => onPageChange(Math.max(1, page - 1))}
+            disabled={page === 1}
+            className="flex-1 py-3 bg-white border border-tin/30 rounded-2xl text-sm font-semibold text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all min-h-[2.75rem]"
+          >
+            ← Anterior
+          </button>
+          <span className="text-sm text-tin-dark font-medium whitespace-nowrap">
+            Hoja {page} / {totalPages}
+          </span>
+          <button
+            onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+            disabled={page === totalPages}
+            className="flex-1 py-3 bg-white border border-tin/30 rounded-2xl text-sm font-semibold text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all min-h-[2.75rem]"
+          >
+            Siguiente →
+          </button>
+        </div>
       )}
     </div>
   )
 }
 
-// ── Página principal ───────────────────────────────────────────
-export default function TiendaCuadernoPage() {
+
+// -- Página principal --
+
+function TiendaCuadernoPage() {
+  // -- Estado --
+  const [view, setView]             = useState<'notebook' | 'shelf'>('notebook')
+  const [selectedDate, setSelectedDate] = useState(TODAY_ISO)
+  const [showPanel, setShowPanel]   = useState(false)
+  const [pagina, setPaginaCuaderno] = useState(1)
+
+  // -- Auth --
   const usuario   = useAuthStore(s => s.usuario)
   const almacenId = usuario?.almacenId ?? null
 
-  const { data: registros = [], isLoading } = useRegistrosTienda()
-  const marcarDevuelto = useMarcarDevueltoTienda()
-  const { data: pendientes = [] } = usePendientesTienda(almacenId)
-
-  const [view, setView]               = useState<'notebook' | 'shelf'>('notebook')
-  const [selectedDate, setSelectedDate] = useState(TODAY_ISO)
-  const [showModal, setShowModal]     = useState(false)
-
   const dias = lastDays(14)
+  const desdeFecha = dias[dias.length - 1] // 14 días atrás
+  const hastaFecha = dias[0]               // hoy
 
-  // Agrupar por fecha para mostrar conteo en la estantería
-  const registrosPorDia: Record<string, number> = {}
-  for (const r of registros) {
-    if (almacenId && r.almacenId !== almacenId) continue
-    const iso = getLocalISO(new Date(r.creadoEn))
-    registrosPorDia[iso] = (registrosPorDia[iso] ?? 0) + 1
-  }
+  // -- Query: conteo para la estantería (limit alto, agrupa en select) --
+  const { data: conteoData, isLoading: loadingConteo } = useRegistrosTiendaConteo(
+    almacenId, desdeFecha, hastaFecha,
+  )
+  const registrosPorDia = conteoData ?? {}
 
-  // Registros del día seleccionado, orden más reciente primero
-  const registrosDia = registros
-    .filter(r => almacenId ? r.almacenId === almacenId : true)
-    .filter(r => new Date(r.creadoEn).toDateString() === toDateString(selectedDate))
-    .slice()
-    .reverse()
+  // -- Query: registros del día seleccionado (paginado servidor) --
+  const { data: paginaData, isLoading: loadingDia } = useRegistrosTiendaPaginado({
+    almacenId: almacenId ?? undefined,
+    desde: selectedDate,
+    hasta: selectedDate,
+    page: pagina,
+    limit: ITEMS_PER_PAGE,
+  })
+  const registrosDia = [...(paginaData?.data ?? [])].reverse()
+  const meta         = paginaData?.meta
 
+  const isLoading = loadingConteo || loadingDia
+
+  // -- Handlers --
   function goToShelf() { setView('shelf') }
-  function goToNotebook(iso: string) { setSelectedDate(iso); setView('notebook') }
+  function goToNotebook(iso: string) { setSelectedDate(iso); setPaginaCuaderno(1); setView('notebook') }
 
+  // -- JSX --
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-24">
@@ -577,17 +627,17 @@ export default function TiendaCuadernoPage() {
 
   return (
     <>
-      {/* ── Contenedor con animación de slide horizontal ── */}
-      <div className="overflow-hidden">
+      {/* Contenedor con altura fija — scroll propio, no depende del navegador */}
+      <div className="overflow-hidden" style={{ height: 'calc(100dvh - 11.5rem)' }}>
         <div
-          className="flex transition-transform duration-500 ease-in-out"
+          className="flex h-full transition-transform duration-500 ease-in-out"
           style={{
             width: '200%',
             transform: view === 'shelf' ? 'translateX(0)' : 'translateX(-50%)',
           }}
         >
           {/* Panel izquierdo: estantería */}
-          <div style={{ width: '50%' }}>
+          <div className="overflow-y-auto" style={{ width: '50%' }}>
             <ShelfView
               dias={dias}
               registrosPorDia={registrosPorDia}
@@ -596,26 +646,32 @@ export default function TiendaCuadernoPage() {
             />
           </div>
 
-          {/* Panel derecho: cuaderno */}
-          <div style={{ width: '50%' }}>
+          {/* Panel derecho: cuaderno (solo lectura) */}
+          <div className="overflow-y-auto" style={{ width: '50%' }}>
             <NotebookView
+              key={selectedDate}
               selectedDate={selectedDate}
               registros={registrosDia}
-              almacenId={almacenId}
-              pendientes={pendientes}
+              totalRegistros={meta?.total ?? 0}
+              page={pagina}
+              totalPages={meta?.totalPages ?? 1}
+              onPageChange={setPaginaCuaderno}
               onOpenShelf={goToShelf}
-              onOpenModal={() => setShowModal(true)}
-              onDevolver={id => marcarDevuelto.mutate({ id })}
-              devolviendo={marcarDevuelto.isPending}
+              onOpenPanel={() => setShowPanel(true)}
             />
           </div>
         </div>
       </div>
 
-      {/* ── Modal nuevo registro ── */}
-      {showModal && almacenId && (
-        <ModalNuevo almacenId={almacenId} onClose={() => setShowModal(false)} />
-      )}
+      {/* Slide panel: detalle del día agrupado por orden */}
+      <SlideDetalleDia
+        open={showPanel}
+        onClose={() => setShowPanel(false)}
+        almacenId={almacenId}
+        selectedDate={selectedDate}
+      />
     </>
   )
 }
+
+export default TiendaCuadernoPage
