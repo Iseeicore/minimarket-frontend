@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Users, Plus, Pencil, UserX, Eye, EyeOff, ShieldCheck, Package, Store, Warehouse, Loader2 } from 'lucide-react'
+import { Plus, Pencil, UserX, Eye, EyeOff, ShieldCheck, Package, Store, Warehouse, Loader2 } from 'lucide-react'
 import { useUsuarios, useCreateUsuario, useUpdateUsuario, useDeleteUsuario } from '../hooks/useUsuarios'
 import { useAlmacenes } from '../hooks/useAlmacenes'
 import { useAuthStore } from '../store/auth.store'

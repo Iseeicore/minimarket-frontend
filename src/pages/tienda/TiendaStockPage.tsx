@@ -86,7 +86,7 @@ function TiendaStockPage() {
               const nombreVar  = item.variante?.nombre ?? '—'
               const unidad     = item.variante?.unidad?.abreviatura ?? ''
               const precio     = Number(item.variante?.precioVenta ?? 0)
-              const minimo     = item.stockMinimo ?? item.variante?.stockMinimo ?? 0
+              const minimo     = item.stockMinimo ?? 0
 
               const almacen   = item.almacen   ?? 0
               const tienda    = item.tienda    ?? 0

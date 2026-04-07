@@ -23,9 +23,9 @@ export function useCreateAlmacen() {
     mutationFn: (data: CreateAlmacenDto) => almacenesService.create(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.almacenes.all })
-      sileo.success('Almacén creado correctamente')
+      sileo.success({ title: 'Almacén creado correctamente' })
     },
-    onError: () => sileo.error('Error al crear el almacén'),
+    onError: () => sileo.error({ title: 'Error al crear el almacén' }),
   })
 }
 
@@ -37,9 +37,9 @@ export function useUpdateAlmacen() {
       almacenesService.update(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.almacenes.all })
-      sileo.success('Almacén actualizado')
+      sileo.success({ title: 'Almacén actualizado' })
     },
-    onError: () => sileo.error('Error al actualizar el almacén'),
+    onError: () => sileo.error({ title: 'Error al actualizar el almacén' }),
   })
 }
 
@@ -50,8 +50,8 @@ export function useDeleteAlmacen() {
     mutationFn: almacenesService.remove,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.almacenes.all })
-      sileo.success('Almacén eliminado')
+      sileo.success({ title: 'Almacén eliminado' })
     },
-    onError: () => sileo.error('Error al eliminar el almacén'),
+    onError: () => sileo.error({ title: 'Error al eliminar el almacén' }),
   })
 }

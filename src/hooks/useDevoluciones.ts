@@ -44,14 +44,14 @@ export function useCreateDevolucion() {
         qc.invalidateQueries({ queryKey: qk.stock.byAlmacen(almacenId) })
         qc.invalidateQueries({ queryKey: qk.caja.activa(almacenId) })
       }
-      sileo.success('Devolución procesada — stock restaurado')
+      sileo.success({ title: 'Devolución procesada — stock restaurado' })
     },
     onError: (error: any) => {
       const msg: string = error?.response?.data?.message ?? ''
       if (msg.toLowerCase().includes('devuelto') || msg.toLowerCase().includes('supera')) {
-        sileo.error('La cantidad a devolver supera la vendida')
+        sileo.error({ title: 'La cantidad a devolver supera la vendida' })
       } else {
-        sileo.error('Error al procesar la devolución')
+        sileo.error({ title: 'Error al procesar la devolución' })
       }
     },
   })

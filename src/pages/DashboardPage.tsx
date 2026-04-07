@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  TrendingUp, AlertTriangle, Wallet, Loader2,
+  TrendingUp, AlertTriangle, Loader2,
   CheckCircle2, XCircle, Package, ArrowRight, Warehouse,
 } from 'lucide-react'
 import { useVentasHoy } from '../hooks/useVentas'
@@ -72,7 +72,7 @@ export default function DashboardPage() {
   const bajosMinimo = stockItems.filter(s => s.cantidad < (s.variante?.stockMinimo ?? 0))
 
   const valorInventario = stockItems.reduce(
-    (acc, s) => acc + s.cantidad * parseFloat(s.variante?.precioVenta ?? '0'), 0
+    (acc, s) => acc + s.cantidad * (s.variante?.precioVenta ?? 0), 0
   )
 
   const topVariantes = useMemo(() => {

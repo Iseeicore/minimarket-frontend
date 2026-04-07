@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Outlet, NavLink, Navigate, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/auth.store'
 import {
-  LayoutDashboard, Package, Tag, Warehouse, Users,
+  LayoutDashboard, Package, Tag, Warehouse,
   ShoppingCart, Receipt, CreditCard, RotateCcw,
   ClipboardList, BookOpen, LogOut, Store, Ruler,
   Boxes, UserCog, Contact, Menu, X, GitCompare, FileSpreadsheet,

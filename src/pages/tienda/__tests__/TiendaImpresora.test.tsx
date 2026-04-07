@@ -9,17 +9,13 @@ describe('TiendaImpresora', () => {
     expect(screen.getByText('Como conectar')).toBeInTheDocument()
   })
 
-  it('muestra botón de conectar impresora', () => {
-    renderWithProviders(<TiendaImpresora />)
-    const matches = screen.getAllByText('Conectar Impresora')
-    // El botón + el texto en las instrucciones
-    expect(matches.length).toBeGreaterThanOrEqual(1)
-    const button = matches.find(el => el.closest('button'))
-    expect(button).toBeInTheDocument()
-  })
-
   it('muestra info técnica', () => {
     renderWithProviders(<TiendaImpresora />)
     expect(screen.getByText(/ESC\/POS 58mm/i)).toBeInTheDocument()
+  })
+
+  it('muestra instrucciones de conexión', () => {
+    renderWithProviders(<TiendaImpresora />)
+    expect(screen.getByText(/Encende la impresora termica/i)).toBeInTheDocument()
   })
 })

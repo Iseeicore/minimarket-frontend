@@ -47,9 +47,9 @@ export function useCreateRegistroAlmacen() {
     mutationFn: (data: CreateRegistroAlmacenDto) => registrosAlmacenService.create(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.registroAlmacen.all })
-      sileo.success('Registro creado correctamente')
+      sileo.success({ title: 'Registro creado correctamente' })
     },
-    onError: () => sileo.error('Error al crear el registro'),
+    onError: () => sileo.error({ title: 'Error al crear el registro' }),
   })
 }
 
@@ -60,8 +60,8 @@ export function useMarcarDevueltoAlmacen() {
       registrosAlmacenService.marcarDevuelto(id, notas),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.registroAlmacen.all })
-      sileo.success('Registro marcado como devuelto')
+      sileo.success({ title: 'Registro marcado como devuelto' })
     },
-    onError: () => sileo.error('Error al marcar la devolución'),
+    onError: () => sileo.error({ title: 'Error al marcar la devolución' }),
   })
 }

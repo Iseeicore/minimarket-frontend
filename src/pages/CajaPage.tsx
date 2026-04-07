@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type JSX } from 'react'
 import { Wallet, Lock, Unlock, Plus, TrendingUp, TrendingDown, SlidersHorizontal, Loader2, ChevronDown } from 'lucide-react'
 import {
   useCajas,

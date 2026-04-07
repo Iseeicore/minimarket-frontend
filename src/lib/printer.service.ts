@@ -1,3 +1,4 @@
+/// <reference types="web-bluetooth" />
 // ── PrinterService — Conexion Web Bluetooth con impresora termica ─────────────
 // Descubre servicios y características dinámicamente — compatible con cualquier
 // impresora térmica BLE (POS-5890U, MTP-II, Goojprt, etc.)

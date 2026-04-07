@@ -170,7 +170,7 @@ function CantidadInput({ cantidad, max, onChange }: { cantidad: number; max: num
 
     // Si excede el stock → alert + cap al maximo
     if (parsed > max) {
-      sileo.warning(`Stock disponible: ${max}. Se ajusto al maximo.`)
+      sileo.warning({ title: `Stock disponible: ${max}. Se ajusto al maximo.` })
       setLocal('')
       onChange(max)
       return
@@ -215,7 +215,6 @@ function TiendaVentasPage() {
   const [montoCierre, setMontoCierre] = useState('')
 
   const cajaAbiertaHoy = estadoCaja?.estado === 'ABIERTA_HOY'
-  const cajaRequiereAccion = estadoCaja?.requiereAccion ?? true
 
   // Imprime via BT si conectada, si no fallback a window.print()
   // Las notificaciones sileo se manejan en el store

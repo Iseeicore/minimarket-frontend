@@ -15,8 +15,8 @@ export function useCreateProducto() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: productosService.create,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: qk.productos.all }); sileo.success('Producto creado') },
-    onError: () => sileo.error('Error al crear el producto'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: qk.productos.all }); sileo.success({ title: 'Producto creado' }) },
+    onError: () => sileo.error({ title: 'Error al crear el producto' }),
   })
 }
 
@@ -24,8 +24,8 @@ export function useUpdateProducto() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: any }) => productosService.update(id, data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: qk.productos.all }); sileo.success('Producto actualizado') },
-    onError: () => sileo.error('Error al actualizar el producto'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: qk.productos.all }); sileo.success({ title: 'Producto actualizado' }) },
+    onError: () => sileo.error({ title: 'Error al actualizar el producto' }),
   })
 }
 
@@ -33,8 +33,8 @@ export function useDeleteProducto() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: productosService.remove,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: qk.productos.all }); sileo.success('Producto eliminado') },
-    onError: () => sileo.error('Error al eliminar el producto'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: qk.productos.all }); sileo.success({ title: 'Producto eliminado' }) },
+    onError: () => sileo.error({ title: 'Error al eliminar el producto' }),
   })
 }
 
@@ -53,9 +53,9 @@ export function useCreateVariante() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.productos.all })
       qc.invalidateQueries({ queryKey: qk.variantes.all })
-      sileo.success('Variante creada')
+      sileo.success({ title: 'Variante creada' })
     },
-    onError: () => sileo.error('Error al crear la variante'),
+    onError: () => sileo.error({ title: 'Error al crear la variante' }),
   })
 }
 
@@ -66,8 +66,8 @@ export function useUpdateVariante() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.productos.all })
       qc.invalidateQueries({ queryKey: qk.variantes.all })
-      sileo.success('Variante actualizada')
+      sileo.success({ title: 'Variante actualizada' })
     },
-    onError: () => sileo.error('Error al actualizar la variante'),
+    onError: () => sileo.error({ title: 'Error al actualizar la variante' }),
   })
 }

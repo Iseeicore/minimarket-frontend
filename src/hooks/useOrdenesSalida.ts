@@ -72,10 +72,10 @@ export function useCreateOrdenSalida() {
       qc.invalidateQueries({ queryKey: ['ordenes-salida'] })
       qc.invalidateQueries({ queryKey: ['stock'] })
       qc.invalidateQueries({ queryKey: ['registro-tienda'] })
-      sileo.success('Orden creada correctamente')
+      sileo.success({ title: 'Orden creada correctamente' })
     },
     onError: () => {
-      sileo.error('No se pudo crear la orden')
+      sileo.error({ title: 'No se pudo crear la orden' })
     },
   })
 }
@@ -88,10 +88,10 @@ export function useCompletarOrden() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['ordenes-salida'] })
       qc.invalidateQueries({ queryKey: ['stock'] })
-      sileo.success('Orden completada')
+      sileo.success({ title: 'Orden completada' })
     },
     onError: () => {
-      sileo.error('No se pudo completar la orden')
+      sileo.error({ title: 'No se pudo completar la orden' })
     },
   })
 }
@@ -103,10 +103,10 @@ export function useCancelarOrden() {
     mutationFn: (id: number) => ordenesSalidaService.cancelar(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['ordenes-salida'] })
-      sileo.success('Orden cancelada')
+      sileo.success({ title: 'Orden cancelada' })
     },
     onError: () => {
-      sileo.error('No se pudo cancelar la orden')
+      sileo.error({ title: 'No se pudo cancelar la orden' })
     },
   })
 }

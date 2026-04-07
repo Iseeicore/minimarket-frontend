@@ -27,6 +27,7 @@ const tipoMovBadge: Record<TipoMovStock, string> = {
   VENTA_SALIDA:       'bg-accent/20 text-accent-dark',
   DEVOLUCION_ENTRADA: 'bg-amber-50 text-amber-700',
   AJUSTE:             'bg-tin-pale text-tin-dark',
+  TRANSFERENCIA_SALIDA: 'bg-blue-50 text-blue-700',
 }
 
 // ── Constantes ─────────────────────────────────────────────────

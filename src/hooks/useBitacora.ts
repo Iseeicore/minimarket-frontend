@@ -27,8 +27,8 @@ export function useCreateEntrada() {
     mutationFn: (data: CreateEntradaBitacoraDto) => bitacoraService.create(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.bitacora.all })
-      sileo.success('Entrada registrada en bitácora')
+      sileo.success({ title: 'Entrada registrada en bitácora' })
     },
-    onError: () => sileo.error('Error al registrar en bitácora'),
+    onError: () => sileo.error({ title: 'Error al registrar en bitácora' }),
   })
 }

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ChevronLeft, ChevronRight, ChevronDown,
-  CheckCircle2, AlertTriangle, GitCompare,
+  GitCompare,
   Loader2, RotateCcw, X, PanelRightOpen,
 } from 'lucide-react'
 import { useSincronizacion } from '../../hooks/useSincronizacion'
@@ -313,8 +313,6 @@ export default function TiendaSincronizacionDetallePage() {
   const coincidencias    = items.filter(i => i.estado === 'COINCIDE')
   const diferencias      = items.filter(i => i.estado === 'DIFERENCIA')
   const sinContrapartida = items.filter(i => i.estado === 'SIN_CONTRAPARTIDA')
-  const resueltos        = items.filter(i => i.estado === 'RESUELTO')
-
   // Devoluciones que se omitieron en esta sync (marcadas como devuelto antes del sync)
   const omitidas = todosRegistros.filter(r => r.devuelto === true)
 

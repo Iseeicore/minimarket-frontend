@@ -1,4 +1,4 @@
-import { Bluetooth, BluetoothOff, Loader2, Printer, CheckCircle, XCircle, Wifi, RefreshCw } from 'lucide-react'
+import { Bluetooth, BluetoothOff, Loader2, Printer, XCircle, Wifi, RefreshCw } from 'lucide-react'
 import { usePrinterStore } from '../../store/printer.store'
 
 export default function TiendaImpresora() {

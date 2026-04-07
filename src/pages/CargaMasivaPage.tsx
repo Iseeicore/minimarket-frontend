@@ -85,11 +85,11 @@ function CargaMasivaPage() {
     try {
       const res = await cargaMasivaService.cargarCatalogo(file, almacenId)
       setResult(res)
-      sileo.success('Catálogo cargado correctamente')
+      sileo.success({ title: 'Catálogo cargado correctamente' })
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Error al cargar el catálogo'
       setError(typeof msg === 'string' ? msg : msg.join(', '))
-      sileo.error('Error en la carga masiva')
+      sileo.error({ title: 'Error en la carga masiva' })
     } finally {
       setLoading(false)
     }

@@ -30,7 +30,7 @@ export const usePrinterStore = create<PrinterState>((set) => {
 
     // Notificaciones sileo por cada cambio relevante
     if (status === 'connecting' && detail) {
-      sileo.info(detail)
+      sileo.info({ title: detail })
     }
   })
 
@@ -51,12 +51,12 @@ export const usePrinterStore = create<PrinterState>((set) => {
         const ok = await printerService.connect()
         if (ok) {
           set({ hasSavedDevice: true })
-          sileo.success(`Impresora "${printerService.deviceName}" conectada`)
+          sileo.success({ title: `Impresora "${printerService.deviceName}" conectada` })
         }
         return ok
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Error desconocido'
-        sileo.error(`Error al conectar: ${msg}`)
+        sileo.error({ title: `Error al conectar: ${msg}` })
         return false
       }
     },
@@ -65,12 +65,12 @@ export const usePrinterStore = create<PrinterState>((set) => {
       try {
         const ok = await printerService.reconnect()
         if (ok) {
-          sileo.success(`Reconectada: "${printerService.deviceName}"`)
+          sileo.success({ title: `Reconectada: "${printerService.deviceName}"` })
         }
         return ok
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Error desconocido'
-        sileo.error(`Error al reconectar: ${msg}`)
+        sileo.error({ title: `Error al reconectar: ${msg}` })
         return false
       }
     },
@@ -78,23 +78,23 @@ export const usePrinterStore = create<PrinterState>((set) => {
     disconnect() {
       printerService.disconnect()
       set({ hasSavedDevice: false })
-      sileo.info('Impresora desconectada')
+      sileo.info({ title: 'Impresora desconectada' })
     },
 
     async printOrden(orden: OrdenSalida) {
       if (!printerService.isConnected) {
-        sileo.warning('Conecta la impresora primero (desde el boton Bluetooth)')
+        sileo.warning({ title: 'Conecta la impresora primero (desde el boton Bluetooth)' })
         return
       }
       set({ isPrinting: true })
       try {
-        sileo.info('Enviando ticket a la impresora...')
+        sileo.info({ title: 'Enviando ticket a la impresora...' })
         const bytes = buildTicketBytes(orden)
         await printerService.print(bytes)
-        sileo.success('Ticket impreso correctamente')
+        sileo.success({ title: 'Ticket impreso correctamente' })
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Error desconocido'
-        sileo.error(`Error al imprimir: ${msg}`)
+        sileo.error({ title: `Error al imprimir: ${msg}` })
         throw err
       } finally {
         set({ isPrinting: false })
@@ -103,18 +103,18 @@ export const usePrinterStore = create<PrinterState>((set) => {
 
     async printTest() {
       if (!printerService.isConnected) {
-        sileo.warning('Conecta la impresora primero')
+        sileo.warning({ title: 'Conecta la impresora primero' })
         throw new Error('Impresora no conectada')
       }
       set({ isPrinting: true })
       try {
-        sileo.info('Enviando ticket de prueba...')
+        sileo.info({ title: 'Enviando ticket de prueba...' })
         const bytes = buildTestTicketBytes()
         await printerService.print(bytes)
-        sileo.success('Ticket de prueba impreso')
+        sileo.success({ title: 'Ticket de prueba impreso' })
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Error desconocido'
-        sileo.error(`Error en prueba: ${msg}`)
+        sileo.error({ title: `Error en prueba: ${msg}` })
         throw err
       } finally {
         set({ isPrinting: false })

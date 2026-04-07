@@ -130,7 +130,7 @@ export default function RegisterPage() {
       })
 
       setAuth(data.access_token, data.usuario)
-      sileo.success('¡Bienvenido! Tu empresa quedó registrada')
+      sileo.success({ title: '¡Bienvenido! Tu empresa quedó registrada' })
       navigate('/dashboard')
 
     } catch (err: any) {

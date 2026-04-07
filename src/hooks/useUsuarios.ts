@@ -22,14 +22,14 @@ export function useCreateUsuario() {
     mutationFn: (data: CreateUsuarioDto) => usuariosService.create(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QK_USUARIOS })
-      sileo.success('Usuario creado correctamente')
+      sileo.success({ title: 'Usuario creado correctamente' })
     },
     onError: (err: any) => {
       const msg: string = err?.response?.data?.message ?? ''
       if (msg.toLowerCase().includes('email')) {
-        sileo.error('Ese email ya está registrado')
+        sileo.error({ title: 'Ese email ya está registrado' })
       } else {
-        sileo.error('Error al crear el usuario')
+        sileo.error({ title: 'Error al crear el usuario' })
       }
     },
   })
@@ -44,9 +44,9 @@ export function useUpdateUsuario() {
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: QK_USUARIOS })
       qc.invalidateQueries({ queryKey: qkDetail(id) })
-      sileo.success('Usuario actualizado')
+      sileo.success({ title: 'Usuario actualizado' })
     },
-    onError: () => sileo.error('Error al actualizar el usuario'),
+    onError: () => sileo.error({ title: 'Error al actualizar el usuario' }),
   })
 }
 
@@ -60,8 +60,8 @@ export function useDeleteUsuario() {
     mutationFn: (id: number) => usuariosService.remove(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QK_USUARIOS })
-      sileo.success('Usuario desactivado')
+      sileo.success({ title: 'Usuario desactivado' })
     },
-    onError: () => sileo.error('No se pudo desactivar el usuario'),
+    onError: () => sileo.error({ title: 'No se pudo desactivar el usuario' }),
   })
 }

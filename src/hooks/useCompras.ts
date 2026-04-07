@@ -32,9 +32,9 @@ export function useCreateCompra() {
     mutationFn: (data: CreateOrdenCompraDto) => comprasService.create(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.compras.all })   // invalida todas las páginas
-      sileo.success('Orden de compra creada')
+      sileo.success({ title: 'Orden de compra creada' })
     },
-    onError: () => sileo.error('Error al crear la orden de compra'),
+    onError: () => sileo.error({ title: 'Error al crear la orden de compra' }),
   })
 }
 
@@ -51,9 +51,9 @@ export function useRecibirOrden() {
       qc.invalidateQueries({ queryKey: qk.compras.all })
       qc.invalidateQueries({ queryKey: qk.compras.detail(id) })
       if (almacenId) qc.invalidateQueries({ queryKey: qk.stock.byAlmacen(almacenId) })
-      sileo.success('Orden marcada como recibida — stock actualizado')
+      sileo.success({ title: 'Orden marcada como recibida — stock actualizado' })
     },
-    onError: () => sileo.error('No se pudo marcar como recibida'),
+    onError: () => sileo.error({ title: 'No se pudo marcar como recibida' }),
   })
 }
 
@@ -66,9 +66,9 @@ export function useRegistrarPago() {
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: qk.compras.detail(id) })
       qc.invalidateQueries({ queryKey: qk.compras.all })
-      sileo.success('Pago registrado correctamente')
+      sileo.success({ title: 'Pago registrado correctamente' })
     },
-    onError: () => sileo.error('No se pudo registrar el pago'),
+    onError: () => sileo.error({ title: 'No se pudo registrar el pago' }),
   })
 }
 
@@ -79,8 +79,8 @@ export function useDeleteCompra() {
     mutationFn: comprasService.remove,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.compras.all })
-      sileo.success('Orden eliminada')
+      sileo.success({ title: 'Orden eliminada' })
     },
-    onError: () => sileo.error('Error al eliminar la orden'),
+    onError: () => sileo.error({ title: 'Error al eliminar la orden' }),
   })
 }

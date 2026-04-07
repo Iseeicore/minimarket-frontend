@@ -30,7 +30,7 @@ export interface ItemVenta {
   tipoDescuento: TipoDescuento
   valorDescuento: string  // Decimal
   subtotal: string        // Decimal
-  variante?: { id: number; nombre: string; sku: string | null; unidad?: { abreviatura: string } }
+  variante?: { id: number; nombre: string; sku: string | null; unidad?: { abreviatura: string }; producto?: { nombre: string } }
 }
 
 // Ítem en el carrito local — estado UI antes de confirmar la venta

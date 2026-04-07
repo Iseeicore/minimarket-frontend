@@ -52,18 +52,18 @@ export function useCreateVenta() {
         qc.invalidateQueries({ queryKey: qk.stock.byAlmacen(almacenId) })
         qc.invalidateQueries({ queryKey: qk.caja.activa(almacenId) })
       }
-      sileo.success('Venta registrada correctamente')
+      sileo.success({ title: 'Venta registrada correctamente' })
     },
     onError: (error: any) => {
       // El backend puede devolver 400 con message como string o array (class-validator)
       const raw = error?.response?.data?.message ?? ''
       const msg = (Array.isArray(raw) ? raw.join(' ') : String(raw)).toLowerCase()
       if (msg.includes('stock')) {
-        sileo.error('Stock insuficiente para completar la venta')
+        sileo.error({ title: 'Stock insuficiente para completar la venta' })
       } else if (msg.includes('caja')) {
-        sileo.error('No hay caja abierta — abrí la caja primero')
+        sileo.error({ title: 'No hay caja abierta — abrí la caja primero' })
       } else {
-        sileo.error('Error al registrar la venta')
+        sileo.error({ title: 'Error al registrar la venta' })
       }
     },
   })

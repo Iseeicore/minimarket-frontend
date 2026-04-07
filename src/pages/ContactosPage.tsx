@@ -239,7 +239,6 @@ export default function ContactosPage() {
           {/* Mobile — cards */}
           <div className="md:hidden space-y-3">
             {contactos.map(c => {
-              const Meta = TIPO_META[c.tipo]
               return (
                 <div key={c.id} className="bg-white rounded-2xl border border-tin/20 shadow-sm p-4">
                   <div className="flex items-start justify-between mb-2.5">

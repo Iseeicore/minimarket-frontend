@@ -54,9 +54,9 @@ export function useAbrirDia() {
       qc.invalidateQueries({ queryKey: qk.caja.all })
       qc.invalidateQueries({ queryKey: qk.caja.activa(caja.almacenId) })
       qc.invalidateQueries({ queryKey: qk.caja.estado(caja.almacenId) })
-      sileo.success('Caja abierta para hoy')
+      sileo.success({ title: 'Caja abierta para hoy' })
     },
-    onError: () => sileo.error('Error al abrir la caja'),
+    onError: () => sileo.error({ title: 'Error al abrir la caja' }),
   })
 }
 
@@ -88,9 +88,9 @@ export function useAbrirCaja() {
     onSuccess: (caja) => {
       qc.invalidateQueries({ queryKey: qk.caja.all })
       qc.invalidateQueries({ queryKey: qk.caja.activa(caja.almacenId) })
-      sileo.success('Caja abierta correctamente')
+      sileo.success({ title: 'Caja abierta correctamente' })
     },
-    onError: () => sileo.error('Error al abrir la caja'),
+    onError: () => sileo.error({ title: 'Error al abrir la caja' }),
   })
 }
 
@@ -107,9 +107,9 @@ export function useCerrarCaja() {
       qc.invalidateQueries({ queryKey: qk.caja.all })
       qc.invalidateQueries({ queryKey: qk.caja.activa(caja.almacenId) })
       qc.invalidateQueries({ queryKey: qk.caja.detail(caja.id) })
-      sileo.success('Caja cerrada')
+      sileo.success({ title: 'Caja cerrada' })
     },
-    onError: () => sileo.error('Error al cerrar la caja'),
+    onError: () => sileo.error({ title: 'Error al cerrar la caja' }),
   })
 }
 
@@ -122,8 +122,8 @@ export function useCrearMovimiento() {
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: qk.caja.movimientos(id) })
       qc.invalidateQueries({ queryKey: qk.caja.detail(id) })
-      sileo.success('Movimiento registrado')
+      sileo.success({ title: 'Movimiento registrado' })
     },
-    onError: () => sileo.error('Error al registrar el movimiento'),
+    onError: () => sileo.error({ title: 'Error al registrar el movimiento' }),
   })
 }

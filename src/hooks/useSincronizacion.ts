@@ -42,9 +42,9 @@ export function useEjecutarSincronizacion() {
     mutationFn: (data: CreateSincronizacionDto) => sincronizacionService.ejecutar(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.sincronizacion.all })
-      sileo.success('Sincronización ejecutada correctamente')
+      sileo.success({ title: 'Sincronización ejecutada correctamente' })
     },
-    onError: () => sileo.error('Error al ejecutar la sincronización'),
+    onError: () => sileo.error({ title: 'Error al ejecutar la sincronización' }),
   })
 }
 
@@ -55,9 +55,9 @@ export function useResolverItem(sincId: number) {
       sincronizacionService.resolverItem(sincId, itemId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.sincronizacion.detail(sincId) })
-      sileo.success('Ítem resuelto')
+      sileo.success({ title: 'Ítem resuelto' })
     },
-    onError: () => sileo.error('Error al resolver el ítem'),
+    onError: () => sileo.error({ title: 'Error al resolver el ítem' }),
   })
 }
 
@@ -68,8 +68,8 @@ export function useResolverAuto(sincId: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.sincronizacion.detail(sincId) })
       qc.invalidateQueries({ queryKey: qk.sincronizacion.all })
-      sileo.success('Todos los ítems resueltos automáticamente')
+      sileo.success({ title: 'Todos los ítems resueltos automáticamente' })
     },
-    onError: () => sileo.error('Error al resolver automáticamente'),
+    onError: () => sileo.error({ title: 'Error al resolver automáticamente' }),
   })
 }

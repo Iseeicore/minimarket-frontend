@@ -13,10 +13,6 @@ import type { RegistroTienda } from '../../types'
 
 const TODAY_ISO = getLocalISO()
 
-function toDateString(iso: string) {
-  return new Date(iso + 'T00:00:00').toDateString()
-}
-
 function formatHora(iso: string) {
   return new Date(iso).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
 }
