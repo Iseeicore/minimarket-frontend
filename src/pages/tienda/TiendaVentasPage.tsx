@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ShoppingCart, Search, Plus, Minus, Trash2,
@@ -145,13 +145,15 @@ function TicketOrden({ orden, solicitante }: { orden: OrdenSalida; solicitante?:
 function CantidadInput({ cantidad, max, onChange }: { cantidad: number; max: number; onChange: (v: number) => void }) {
   const [local, setLocal] = useState('')
   const [enfocado, setEnfocado] = useState(false)
+  const prevCantidad = useRef(cantidad)
 
   // Sincronizar cuando la cantidad cambia desde afuera (botones +/-)
-  const prevCantidad = useRef(cantidad)
-  if (prevCantidad.current !== cantidad) {
-    prevCantidad.current = cantidad
-    if (!enfocado) setLocal('')
-  }
+  useEffect(() => {
+    if (prevCantidad.current !== cantidad) {
+      prevCantidad.current = cantidad
+      if (!enfocado) setLocal('')
+    }
+  }, [cantidad, enfocado])
 
   function handleFocus() {
     setEnfocado(true)
@@ -235,6 +237,7 @@ function TiendaVentasPage() {
   const [ordenConfirmada, setOrdenConfirmada] = useState<OrdenSalida | null>(null)
   const debounceRef                   = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [queryBusqueda, setQueryBusqueda] = useState('')
+  const [paginaBusqueda, setPaginaBusqueda] = useState(1)
 
   // -- Handlers --
 
@@ -260,7 +263,6 @@ function TiendaVentasPage() {
 
   // Paginacion de resultados de busqueda
   const ITEMS_BUSQUEDA = 8
-  const [paginaBusqueda, setPaginaBusqueda] = useState(1)
   const totalPagsBusqueda = Math.max(1, Math.ceil(resultados.length / ITEMS_BUSQUEDA))
   const resultadosPag = resultados.slice((paginaBusqueda - 1) * ITEMS_BUSQUEDA, paginaBusqueda * ITEMS_BUSQUEDA)
 

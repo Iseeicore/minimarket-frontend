@@ -55,18 +55,18 @@ export default function CajaPage() {
 
   const almacenId = isAdminUser ? adminAlmacenId : (usuario?.almacenId ?? null)
 
+  function handleAlmacenChange(id: number | null) {
+    setAdminAlmacenId(id)
+    if (id) localStorage.setItem(LS_KEY, String(id))
+    else localStorage.removeItem(LS_KEY)
+  }
+
   // Auto-detectar caja abierta si admin no tiene almacén seleccionado
   useEffect(() => {
     if (!isAdminUser || adminAlmacenId) return
     const cajaAbierta = todasCajas.find(c => c.estado === 'ABIERTA')
     if (cajaAbierta) handleAlmacenChange(cajaAbierta.almacenId)
   }, [todasCajas, isAdminUser, adminAlmacenId])
-
-  function handleAlmacenChange(id: number | null) {
-    setAdminAlmacenId(id)
-    if (id) localStorage.setItem(LS_KEY, String(id))
-    else localStorage.removeItem(LS_KEY)
-  }
 
   const { data: caja, isLoading }         = useCajaActiva(almacenId)
   const { data: movimientos = [] }         = useMovimientosCaja(caja?.id)
