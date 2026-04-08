@@ -44,28 +44,32 @@ export default function TiendaLayout() {
         </div>
 
         <div className="flex items-center gap-1.5">
-          {/* Boton Bluetooth */}
-          {printer.isSupported && (
-            <button
-              onClick={handlePrinter}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-colors min-h-[2.75rem] ${
-                btConnected
-                  ? 'text-primary bg-primary/15 hover:bg-primary/25'
-                  : btConnecting
-                    ? 'text-amber-400 cursor-wait'
+          {/* Boton Bluetooth — siempre visible, incluso si el navegador no soporta BLE */}
+          <button
+            onClick={handlePrinter}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-colors min-h-[2.75rem] ${
+              btConnected
+                ? 'text-primary bg-primary/15 hover:bg-primary/25'
+                : btConnecting
+                  ? 'text-amber-400 cursor-wait'
+                  : !printer.isSupported
+                    ? 'text-gray-500 hover:text-white hover:bg-white/10'
                     : 'text-gray-400 hover:text-white hover:bg-white/10'
-              }`}
-              title={btConnected ? `Conectada: ${printer.deviceName}` : 'Configurar impresora'}
-            >
-              <BtIcon size={16} className={btConnecting ? 'animate-spin' : ''} />
-              <span className="hidden sm:inline text-xs font-medium">
-                {btConnected ? printer.deviceName : btConnecting ? 'Conectando...' : 'Impresora'}
-              </span>
-              {btConnected && (
-                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              )}
-            </button>
-          )}
+            }`}
+            title={
+              btConnected ? `Conectada: ${printer.deviceName}` :
+              !printer.isSupported ? 'Bluetooth no disponible en este navegador' :
+              'Configurar impresora'
+            }
+          >
+            <BtIcon size={16} className={btConnecting ? 'animate-spin' : ''} />
+            <span className="hidden sm:inline text-xs font-medium">
+              {btConnected ? printer.deviceName : btConnecting ? 'Conectando...' : 'Impresora'}
+            </span>
+            {btConnected && (
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            )}
+          </button>
 
           {nombre && (
             <p className="text-sm font-medium text-gray-300 hidden sm:block">{usuario?.nombre}</p>

@@ -35,10 +35,7 @@ export default function TiendaHomePage() {
   const nombre = usuario?.nombre?.split(' ')[0] ?? 'Jefe'
 
   return (
-    <div
-      className="bg-gray-100 rounded-2xl border border-tin/20 overflow-y-auto p-4"
-      style={{ height: 'calc(100dvh - 11.5rem)' }}
-    >
+    <div className="bg-gray-100 rounded-2xl border border-tin/20 p-4">
       <div className="space-y-5">
 
         {/* -- Saludo -- */}
