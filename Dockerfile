@@ -19,7 +19,7 @@ FROM nginx:alpine AS production
 COPY --from=build /app/dist /usr/share/nginx/html
 
 # Nginx template — usa $PORT de Railway (default 80 local)
-RUN printf 'server {\n\
+RUN mkdir -p /etc/nginx/templates && printf 'server {\n\
   listen ${PORT:-80};\n\
   root /usr/share/nginx/html;\n\
   index index.html;\n\
