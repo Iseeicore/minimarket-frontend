@@ -21,7 +21,6 @@ COPY --from=build /app/dist /usr/share/nginx/html
 
 # Template de nginx — envsubst solo reemplaza $PORT, deja $uri intacto
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
-ENV NGINX_ENVSUBST_FILTER=PORT
-ENV PORT=80
 
-EXPOSE 80
+# Railway inyecta PORT en runtime; NGINX_ENVSUBST_FILTER limita envsubst a solo $PORT
+ENV NGINX_ENVSUBST_FILTER=PORT
