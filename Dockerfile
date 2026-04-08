@@ -16,11 +16,12 @@ RUN npm run build
 # ── Production stage ─────────────────────────────────────────
 FROM nginx:alpine AS production
 
+# Copiar build de Vite
 COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf.template /etc/nginx/nginx.conf.template
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+
+# Template de nginx — envsubst solo reemplaza $PORT, deja $uri intacto
+COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
+ENV NGINX_ENVSUBST_FILTER=PORT
+ENV PORT=80
 
 EXPOSE 80
-
-CMD ["/entrypoint.sh"]
