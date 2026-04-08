@@ -8,10 +8,13 @@ RUN npm install
 
 COPY . .
 
+# VITE_API_URL se inyecta en build time — Vite lo reemplaza en el bundle
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
-RUN npm run build
+# Cache buster — Railway cambia esto para forzar rebuild
+ARG CACHEBUST=1
+RUN echo "VITE_API_URL=$VITE_API_URL" && npm run build
 
 # ── Production stage ─────────────────────────────────────────
 FROM nginx:alpine AS production
