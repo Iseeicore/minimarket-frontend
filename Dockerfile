@@ -18,9 +18,9 @@ FROM nginx:alpine AS production
 
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# SPA fallback — todas las rutas van a index.html
+# Nginx template — usa $PORT de Railway (default 80 local)
 RUN printf 'server {\n\
-  listen 80;\n\
+  listen ${PORT:-80};\n\
   root /usr/share/nginx/html;\n\
   index index.html;\n\
   location / {\n\
@@ -30,7 +30,7 @@ RUN printf 'server {\n\
     expires 1y;\n\
     add_header Cache-Control "public, immutable";\n\
   }\n\
-}\n' > /etc/nginx/conf.d/default.conf
+}\n' > /etc/nginx/templates/default.conf.template
 
 EXPOSE 80
 
